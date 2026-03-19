@@ -40,16 +40,36 @@ async def _call(method: str, **kwargs: Any) -> Optional[Dict[str, Any]]:
     if not settings.TELEGRAM_BOT_TOKEN:
         logger.warning("TELEGRAM_BOT_TOKEN not set — skip: %s", method)
         return None
+    
+    file_fields = ['animation', 'photo', 'document', 'video', 'voice', 'audio', 'sticker']
+    files = {}
+    payload = {}
+    
+    for k, v in kwargs.items():
+        if v is None: continue
+        if k in file_fields and isinstance(v, str) and v.startswith("/") and os.path.exists(v):
+            import os
+            files[k] = open(v, 'rb')
+        else:
+            payload[k] = v
+            
     try:
-        payload = {k: v for k, v in kwargs.items() if v is not None}
-        async with httpx.AsyncClient(timeout=10) as c:
-            resp = await c.post(_api(method), json=payload)
+        async with httpx.AsyncClient(timeout=20) as c:
+            if files:
+                resp = await c.post(_api(method), data=payload, files=files)
+            else:
+                resp = await c.post(_api(method), json=payload)
+        
+        # Close all files
+        for f in files.values(): f.close()
+        
         data = resp.json()
         if not data.get("ok"):
             logger.error("Telegram [%s] error: %s", method, data.get("description"))
             return None
         return data.get("result")
     except Exception as e:
+        for f in files.values(): f.close()
         logger.exception("Telegram [%s] exception: %s", method, e)
         return None
 
@@ -470,8 +490,8 @@ async def _handle_command(message: Dict, thread_id: Optional[int], tg_user_id: s
         username = await get_bot_username() or "StrategyClaw_bot"
         app_url = f"https://t.me/{username}/app"
         
-        # Generic AI Welcome GIF (Cyberpunk/AI theme)
-        gif_url = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3NueXp5cnZ4ZzltN3NueXp5cnZ4ZzltN3NueXp5cnZ4ZzltN3NueXp5JnVpZD0zNjZiYjI0YyZpZD0zbytUS1NqUFZaNHRRTDJHMkFBJmN0PWc/3o7TKSjPZ4TqL2G2aA/giphy.gif"
+        # Use custom demo.gif from server data folder
+        gif_url = "/root/aquarium-ai/server/data/demo.gif"
         
         reply_markup = {
             "inline_keyboard": [
