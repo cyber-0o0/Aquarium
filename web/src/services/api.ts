@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+let API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+if (API_URL.startsWith('http') && !API_URL.includes('/api/v1')) {
+  API_URL = API_URL.replace(/\/$/, '') + '/api/v1';
+}
 
 export const apiClient = axios.create({
   baseURL: API_URL,
