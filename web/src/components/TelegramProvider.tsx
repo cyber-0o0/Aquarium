@@ -101,7 +101,7 @@ export const TelegramProvider = ({ children }: { children: ReactNode }) => {
         if (!initDataRaw) {
           const { retrieveLaunchParams } = await import('@tma.js/sdk');
           const lp = retrieveLaunchParams();
-          initDataRaw = lp.initDataRaw || '';
+          initDataRaw = (lp.initDataRaw as unknown as string) || '';
         }
 
         console.log('[TG Auth] initDataRaw:', initDataRaw
