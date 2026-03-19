@@ -1,0 +1,135 @@
+.header {
+  padding: 48px 24px 20px; display: flex; flex-direction: column; gap: 16px;
+}
+.headerTop { display: flex; justify-content: space-between; align-items: center; }
+.title { font-size: 32px; font-weight: 800; font-family: var(--font-heading); }
+.countBadge {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 13px; font-weight: 700; font-family: var(--font-mono); color: var(--secondary-text);
+}
+
+.agentSelector {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 14px 18px; border-radius: var(--radius-md);
+  display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.agentSelector:hover { border-color: var(--primary); }
+.selLeft { display: flex; align-items: center; gap: 12px; }
+.selAvatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(200,255,68,0.1); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+}
+.selInfo { display: flex; flex-direction: column; gap: 1px; }
+.selLabel { font-size: 10px; color: var(--secondary-text); text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
+.selName { font-size: 14px; font-weight: 700; }
+
+.agentDropdown {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; margin-top: -8px;
+}
+.dropdownEmpty { padding: 16px; font-size: 14px; color: var(--secondary-text); text-align: center; }
+.dropdownItem {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; font-size: 14px; font-weight: 600;
+  border-bottom: 1px solid var(--border); background: transparent; color: var(--foreground);
+  cursor: pointer; transition: background 0.15s;
+}
+.dropdownItem:last-child { border-bottom: none; }
+.dropdownItem:hover { background: rgba(255,255,255,0.04); }
+.dropdownItemActive { color: var(--primary); }
+.dropdownAvatar {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(200,255,68,0.1); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+
+.searchBar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.searchBar:focus-within { border-color: var(--primary); }
+.searchIcon { color: var(--secondary-text); flex-shrink: 0; }
+.searchInput {
+  background: transparent; border: none; flex: 1;
+  color: var(--foreground); font-size: 15px; outline: none;
+}
+
+.categories {
+  display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;
+}
+.categories::-webkit-scrollbar { display: none; }
+.catChip {
+  padding: 8px 16px; border-radius: 20px; background: transparent;
+  border: 1px solid var(--border); color: var(--secondary-text);
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.catChipActive { background: var(--primary); color: #000; border-color: var(--primary); }
+
+.content { padding: 0 24px 120px; }
+
+.skillsList { display: flex; flex-direction: column; gap: 14px; }
+
+.skillCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: border-color 0.2s;
+}
+.skillCard:hover { border-color: rgba(200,255,68,0.2); }
+
+.skillHeader { display: flex; align-items: center; gap: 14px; }
+
+.skillIcon {
+  width: 48px; height: 48px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; flex-shrink: 0;
+}
+.skillInfo { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.skillNameRow { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.skillName { font-size: 16px; font-weight: 700; }
+.price { font-size: 13px; font-weight: 800; font-family: var(--font-mono); flex-shrink: 0; }
+.priceFree { color: var(--primary); }
+.pricePaid { color: var(--foreground); }
+.skillCat {
+  font-size: 11px; color: var(--secondary-text); font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.skillDesc { font-size: 13px; color: var(--secondary-text); line-height: 1.5; }
+
+.skillFooter { display: flex; justify-content: space-between; align-items: center; }
+.skillStats { display: flex; align-items: center; gap: 14px; }
+.stat { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; }
+.statValue { font-size: 12px; color: var(--secondary-text); font-family: var(--font-mono); }
+
+.installBtn { padding: 9px 16px; font-size: 13px !important; }
+.uninstallBtn {
+  padding: 9px 16px; font-size: 13px !important;
+  color: #ff5c5c !important;
+  background: rgba(255,92,92,0.07) !important;
+  border-color: rgba(255,92,92,0.2) !important;
+  gap: 6px;
+}
+.uninstallBtn:hover {
+  background: rgba(255,92,92,0.14) !important;
+  border-color: rgba(255,92,92,0.35) !important;
+}
+
+.skillCardInstalled {
+  border-color: rgba(var(--primary-rgb, 200,255,68), 0.18) !important;
+  background: linear-gradient(135deg, var(--surface) 80%, rgba(200,255,68,0.04)) !important;
+}
+
+.emptyState {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 48px 20px; color: var(--secondary-text); font-size: 14px; text-align: center;
+}
+.emptyIcon { opacity: 0.25; }

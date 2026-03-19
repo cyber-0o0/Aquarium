@@ -1,0 +1,135 @@
+:root {
+  --background: #0A0A0A;
+  --foreground: #FFFFFF;
+  --surface: #141414;
+  --surface-hover: #1A1A1A;
+  --border: #1F1F1F;
+  --primary: #C8FF44;
+  --primary-foreground: #000000;
+  --secondary-text: #888888;
+  --muted-text: #555555;
+
+  --status-active: #00FF88;
+  --status-idle: #FFBB00;
+  --status-error: #FF4444;
+
+  --accent-green: #00FF88;
+  --accent-purple: #A744FF;
+  --accent-orange: #FFA500;
+  --text-secondary: #888888;
+
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+
+  --safe-area-top: calc(env(safe-area-inset-top, 0px) + 55px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 34px);
+  --header-height: 80px;
+  --tabbar-height: 84px;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body), sans-serif;
+  line-height: 1.5;
+  overflow: hidden;
+  /* Prevent body scroll, use content-scroll instead */
+  -webkit-text-size-adjust: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.mono {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(20, 20, 20, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+.premium-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100vh;
+  height: -webkit-fill-available;
+  position: relative;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: calc(var(--tabbar-height) + var(--safe-area-bottom));
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  contain: content;
+  will-change: transform;
+}
+
+
+.content-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-wrapper {
+  width: 100%;
+  padding-top: var(--safe-area-top);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}

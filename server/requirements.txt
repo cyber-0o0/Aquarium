@@ -1,0 +1,37 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sqlalchemy[asyncio]
+asyncpg
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+python-dotenv
+alembic
+pytest
+httpx
+redis
+aiosqlite
+pytest-asyncio
+
+# LangChain core
+langchain
+langchain-core
+langchain-openai
+langchain-anthropic
+
+# Optional providers (install what you need)
+langchain-google-genai
+langchain-mistralai
+
+# Encryption for user API keys
+cryptography
+
+# Scenario engine
+jinja2
+
+# TON
+tonsdk
+mnemonic
+pynacl

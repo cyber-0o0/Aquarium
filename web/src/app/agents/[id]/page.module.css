@@ -1,0 +1,172 @@
+.header {
+  padding: 48px 24px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.backBtn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--foreground); flex-shrink: 0;
+}
+.headerTitle { flex: 1; font-size: 20px; font-weight: 800; font-family: var(--font-heading); }
+.editBtn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--secondary-text);
+}
+
+.content { padding: 0 24px 40px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Hero */
+.heroCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 24px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.heroTop { display: flex; gap: 16px; align-items: flex-start; }
+.heroAvatar {
+  width: 60px; height: 60px; border-radius: 18px;
+  background: rgba(200,255,68,0.06); border: 2px solid;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; flex-shrink: 0;
+}
+.heroInitials { font-size: 22px; font-weight: 800; font-family: var(--font-heading); color: var(--primary); }
+.heroDot {
+  position: absolute; bottom: -3px; right: -3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--surface);
+}
+.heroMeta { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.heroName { font-size: 22px; font-weight: 800; font-family: var(--font-heading); }
+.heroDesc { font-size: 13px; color: var(--secondary-text); line-height: 1.4; }
+.heroTags { display: flex; gap: 8px; flex-wrap: wrap; }
+.modelTag {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+}
+.statusTag {
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+}
+.status_active { background: rgba(0,255,136,0.1); color: var(--status-active); }
+.status_idle   { background: rgba(255,187,0,0.1);  color: var(--status-idle); }
+.status_error  { background: rgba(255,68,68,0.1);  color: var(--status-error); }
+.status_paused { background: rgba(128,128,128,0.1); color: var(--secondary-text); }
+
+.actionRow { display: flex; gap: 10px; }
+.runBtn { flex: 1; }
+.iconBtn { width: 44px; flex-shrink: 0; }
+
+/* Run panel */
+.runPanel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.runLabel { font-size: 12px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.08em; }
+.runInput {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+  color: var(--foreground); font-family: var(--font-body); font-size: 14px;
+  resize: none; line-height: 1.5; width: 100%;
+}
+.runInput:focus { outline: none; border-color: var(--primary); }
+.sendBtn { width: 100%; }
+.errorMsg { font-size: 13px; color: var(--status-error); }
+
+/* Result */
+.resultCard {
+  background: rgba(0,255,136,0.04); border: 1px solid rgba(0,255,136,0.15);
+  border-radius: var(--radius-lg); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.resultHeader { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+.resultIcon { color: var(--status-active); }
+.resultTokens { margin-left: auto; font-size: 11px; font-family: var(--font-mono); color: var(--secondary-text); }
+.resultText { font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.toolsUsed { display: flex; gap: 6px; flex-wrap: wrap; }
+.toolChip {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(200,255,68,0.08); color: var(--primary);
+  border-radius: 6px; padding: 3px 8px;
+  font-size: 11px; font-weight: 700; font-family: var(--font-mono);
+}
+
+/* Stats */
+.statsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.statCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 16px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.statIcon { color: var(--secondary-text); }
+.statVal { font-size: 22px; font-weight: 800; font-family: var(--font-mono); }
+.statLabel { font-size: 11px; color: var(--secondary-text); font-family: var(--font-mono); text-align: center; }
+
+/* Config */
+.configCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.sectionLabel { font-size: 12px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.08em; }
+.configGrid { display: flex; flex-direction: column; gap: 0; }
+.configRow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.configRow:last-child { border-bottom: none; }
+.configLabel { font-size: 13px; color: var(--secondary-text); }
+.configValue { font-size: 13px; font-weight: 700; font-family: var(--font-mono); }
+.configAccent { color: var(--primary); }
+
+/* Task history */
+.historySection { display: flex; flex-direction: column; gap: 12px; }
+.taskList {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+}
+.taskRow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.taskRow:last-child { border-bottom: none; }
+.taskLeft { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.taskInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.taskInput {
+  font-size: 13px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.taskTime { font-size: 11px; color: var(--secondary-text); font-family: var(--font-mono); }
+.taskTokens { font-size: 11px; font-family: var(--font-mono); color: var(--secondary-text); flex-shrink: 0; }
+
+.emptyTasks {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 32px 20px; color: var(--secondary-text); font-size: 14px;
+}
+.emptyIcon { opacity: 0.25; }
+
+.errorBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(255, 92, 92, 0.08);
+  border: 1px solid rgba(255, 92, 92, 0.2);
+  border-radius: 12px;
+  margin-top: 4px;
+}
+.errorIcon { color: #ff5c5c; flex-shrink: 0; margin-top: 1px; }
+.errorMsg {
+  font-size: 13px;
+  color: #ff5c5c;
+  line-height: 1.5;
+  margin: 0;
+  word-break: break-word;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

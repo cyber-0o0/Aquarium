@@ -1,0 +1,2 @@
+_STREAM_EDIT_INTERVAL = 0.8   # секунд между editMessage (Telegram rate limit ~20/мин на сообщение)
+_STREAM_CHUNK_THRESHOLD = 8   # минимум новых символов перед правкой

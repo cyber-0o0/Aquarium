@@ -1,0 +1,103 @@
+.header {
+  padding: 48px 24px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.backBtn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; color: var(--foreground);
+}
+.title { flex: 1; font-size: 22px; font-weight: 800; font-family: var(--font-heading); text-align: center; }
+.content { padding: 0 24px 40px; }
+.form { display: flex; flex-direction: column; gap: 16px; }
+.inputGroup { display: flex; flex-direction: column; gap: 8px; }
+.label { font-size: 12px; font-weight: 700; color: var(--secondary-text); text-transform: uppercase; letter-spacing: 0.08em; }
+.input, .textarea, .select {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 16px;
+  color: var(--foreground); font-family: var(--font-body); font-size: 15px;
+  width: 100%;
+}
+.input:focus, .textarea:focus, .select:focus { outline: none; border-color: var(--primary); }
+.textarea { resize: vertical; line-height: 1.5; min-height: 96px; }
+.select { appearance: none; cursor: pointer; }
+.select option, .select optgroup { background: #1a1a1a; color: var(--foreground); }
+
+.advancedToggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; font-size: 14px; font-weight: 600; color: var(--secondary-text);
+  cursor: pointer; width: 100%;
+}
+.advancedToggle:hover { border-color: var(--primary); color: var(--foreground); }
+
+.advancedGrid { display: flex; flex-direction: column; gap: 16px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+
+.rangeInput { width: 100%; accent-color: var(--primary); cursor: pointer; }
+.rangeLabels { display: flex; justify-content: space-between; font-size: 11px; color: var(--secondary-text); font-family: var(--font-mono); }
+
+.errorMsg { font-size: 13px; color: var(--status-error); padding: 10px 14px; background: rgba(255,68,68,0.08); border-radius: 10px; }
+.deployBtn { width: 100%; margin-top: 8px; }
+
+.emojiGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.emojiBtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.emojiBtn:hover {
+  border-color: var(--primary);
+  background: rgba(200, 255, 68, 0.05);
+}
+
+.emojiBtnActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #000;
+  transform: scale(1.1);
+}
+.emojiToggleBtn {
+  background: rgba(200, 255, 68, 0.08);
+  border: 1px solid rgba(200, 255, 68, 0.2);
+  border-radius: 12px;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 0 16px;
+  cursor: pointer;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.emojiToggleBtn:hover {
+  background: rgba(200, 255, 68, 0.15);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.emojiToggleBtn:active {
+  transform: translateY(0);
+}
+

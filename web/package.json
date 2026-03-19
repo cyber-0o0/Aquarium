@@ -1,0 +1,36 @@
+{
+  "name": "aquarium-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "@tma.js/init-data-node": "^2.0.6",
+    "@tma.js/sdk": "^3.1.7",
+    "@tma.js/sdk-react": "^3.0.16",
+    "@tonconnect/ui": "^2.4.2",
+    "@tonconnect/ui-react": "^2.4.2",
+    "axios": "^1.13.6",
+    "clsx": "^2.1.1",
+    "eruda": "^3.4.3",
+    "framer-motion": "^12.37.0",
+    "lucide-react": "^0.577.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "typescript": "^5"
+  }
+}

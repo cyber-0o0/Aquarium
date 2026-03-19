@@ -1,0 +1,242 @@
+.header {
+  padding: 48px 24px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.backBtn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--foreground); flex-shrink: 0;
+}
+.title {
+  flex: 1; font-size: 22px; font-weight: 800;
+  font-family: var(--font-heading); text-align: center;
+}
+.saveIconBtn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--primary); border: none;
+  display: flex; align-items: center; justify-content: center;
+  color: #000; cursor: pointer; flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.saveIconBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.content {
+  padding: 0 24px 40px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.inputGroup { display: flex; flex-direction: column; gap: 8px; }
+.label {
+  font-size: 12px; font-weight: 700; color: var(--secondary-text);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.input, .textarea, .select {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px 16px;
+  color: var(--foreground); font-family: var(--font-body); font-size: 15px;
+  width: 100%;
+}
+.input:focus, .textarea:focus, .select:focus {
+  outline: none; border-color: var(--primary);
+}
+.textarea { resize: vertical; line-height: 1.5; min-height: 110px; }
+.select { appearance: none; cursor: pointer; }
+.select option, .select optgroup { background: #1a1a1a; color: var(--foreground); }
+
+.advancedToggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; font-size: 14px; font-weight: 600; color: var(--secondary-text);
+  cursor: pointer; width: 100%;
+}
+.advancedToggle:hover { border-color: var(--primary); color: var(--foreground); }
+
+.advancedGrid {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 16px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px;
+}
+
+.rangeInput { width: 100%; accent-color: var(--primary); cursor: pointer; }
+.rangeLabels {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--secondary-text); font-family: var(--font-mono);
+}
+
+.errorMsg {
+  font-size: 13px; color: var(--status-error);
+  padding: 10px 14px; background: rgba(255,68,68,0.08); border-radius: 10px;
+}
+
+.saveBtn { width: 100%; }
+
+.dangerZone {
+  margin-top: 8px; padding: 16px;
+  border: 1px solid rgba(255, 68, 68, 0.25);
+  border-radius: 14px; background: rgba(255, 68, 68, 0.04);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.dangerLabel {
+  font-size: 11px; font-weight: 700; color: var(--status-error);
+  text-transform: uppercase; letter-spacing: 0.08em; margin: 0;
+}
+.deleteBtn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px; border-radius: 12px;
+  background: transparent; border: 1px solid rgba(255,68,68,0.4);
+  color: var(--status-error); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+  width: 100%; justify-content: center;
+}
+.deleteBtn:hover { background: rgba(255,68,68,0.1); }
+.deleteBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.skeletonBlock {
+  height: 64px; border-radius: 14px;
+  background: var(--surface); animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.emojiGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.emojiBtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.emojiBtn:hover {
+  border-color: var(--primary);
+  background: rgba(200, 255, 68, 0.05);
+}
+
+.emojiBtnActive {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #000;
+  transform: scale(1.1);
+}
+
+.emojiToggleBtn {
+  background: rgba(200, 255, 68, 0.08);
+  border: 1px solid rgba(200, 255, 68, 0.2);
+  border-radius: 12px;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 0 16px;
+  cursor: pointer;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.emojiToggleBtn:hover {
+  background: rgba(200, 255, 68, 0.15);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.emojiToggleBtn:active {
+  transform: translateY(0);
+}
+.socialCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.socialHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.socialTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--foreground);
+}
+.socialDesc {
+  font-size: 12px;
+  color: var(--secondary-text);
+  margin: 4px 0 0;
+}
+.emojiPickerBox {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #333;
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: var(--primary);
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--primary);
+}
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+.slider.round {
+  border-radius: 24px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}

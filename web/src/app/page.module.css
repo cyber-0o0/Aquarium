@@ -1,0 +1,54 @@
+.header {
+  padding: 48px 24px 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.headerLeft { display: flex; flex-direction: column; gap: 4px; }
+.greeting {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+}
+.title { font-size: 32px; font-weight: 800; font-family: var(--font-heading); }
+.notifBtn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--foreground); position: relative;
+}
+.notifDot {
+  position: absolute; top: 10px; right: 10px;
+  width: 8px; height: 8px; background: var(--primary);
+  border-radius: 50%; border: 2px solid var(--background);
+}
+.statsRow { padding: 0 24px; display: flex; gap: 10px; }
+.statChip {
+  background: var(--surface); padding: 10px 16px; border-radius: 12px;
+  font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border); font-family: var(--font-mono);
+}
+.statChipMuted {
+  background: rgba(255,255,255,0.03); padding: 10px 16px; border-radius: 12px;
+  font-size: 13px; color: var(--secondary-text); font-family: var(--font-mono);
+  border: 1px solid var(--border);
+}
+.statDot { width: 6px; height: 6px; border-radius: 50%; }
+.content { padding: 28px 24px; display: flex; flex-direction: column; gap: 24px; }
+.sectionHeader { display: flex; justify-content: space-between; align-items: center; }
+.sectionTitle { font-size: 20px; font-weight: 800; font-family: var(--font-heading); }
+.seeAll { font-size: 13px; font-weight: 600; color: var(--secondary-text); font-family: var(--font-mono); }
+.agentList { display: flex; flex-direction: column; gap: 12px; }
+.emptyState {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 48px 20px; text-align: center;
+  background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg);
+}
+.emptyIcon { color: var(--primary); opacity: 0.4; }
+.emptyTitle { font-size: 18px; font-weight: 700; }
+.emptyDesc { font-size: 14px; color: var(--secondary-text); line-height: 1.5; }
+.ctaArea { padding-bottom: 16px; }
+.deployBtn { width: 100%; }

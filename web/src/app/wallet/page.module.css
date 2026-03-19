@@ -1,0 +1,566 @@
+.header {
+  padding: 48px 24px 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  font-family: var(--font-heading);
+}
+
+.headerRight { display: flex; align-items: center; gap: 10px; }
+
+.content {
+  padding: 0 24px 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Balance card ── */
+.balanceCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 28px 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.balanceCard::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  right: -40%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(200,255,68,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.balanceTop { display: flex; justify-content: space-between; align-items: flex-start; }
+
+.balanceMeta { display: flex; flex-direction: column; gap: 2px; }
+
+.balanceLabel {
+  font-size: 10px;
+  color: var(--secondary-text);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+}
+
+.walletName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  font-family: var(--font-mono);
+}
+
+.headerActions { display: flex; align-items: center; gap: 8px; }
+
+.priceChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-hover, rgba(255,255,255,0.04));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+
+.tonPrice { font-size: 12px; font-weight: 700; font-family: var(--font-mono); }
+
+.priceChange {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.up { color: var(--status-active); }
+.down { color: var(--status-error, #FF4444); }
+
+.syncBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-text);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.syncBtn:hover:not(:disabled) { background: var(--surface-hover, rgba(255,255,255,0.06)); color: var(--foreground); }
+.syncBtn:disabled { opacity: 0.4; cursor: default; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinning svg { animation: spin 0.8s linear infinite; }
+
+.balanceSkeleton { display: flex; flex-direction: column; gap: 10px; }
+
+.balanceMain { display: flex; align-items: baseline; gap: 4px; }
+
+.amountWhole {
+  font-size: 52px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.amountDecimals {
+  font-size: 26px;
+  color: var(--secondary-text);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.currency {
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 800;
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  align-self: flex-end;
+  padding-bottom: 6px;
+}
+
+.usdValue {
+  font-size: 15px;
+  color: var(--secondary-text);
+  font-family: var(--font-mono);
+  margin-top: -8px;
+}
+
+.addressRow { display: flex; align-items: center; gap: 10px; }
+
+.addressChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 7px 12px;
+  transition: all 0.2s;
+}
+.addressChip:hover { border-color: rgba(255,255,255,0.12); }
+
+.addressText { font-family: var(--font-mono); font-size: 13px; color: var(--secondary-text); font-weight: 600; }
+
+.copyIcon { color: var(--secondary-text); transition: color 0.2s; }
+.copied { color: var(--primary) !important; }
+
+.linkBtn {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 20px;
+  padding: 6px 14px;
+  background: transparent;
+  transition: all 0.2s;
+}
+.linkBtn:hover { background: rgba(200,255,68,0.08); }
+.linkBtn:disabled { opacity: 0.5; cursor: default; }
+
+.noWallet {
+  font-size: 13px;
+  color: var(--secondary-text);
+  padding: 4px 0;
+}
+
+.actionBtns { display: flex; gap: 10px; margin-top: 4px; }
+
+.actionBtn {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  color: var(--foreground);
+  padding: 14px 10px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  transition: all 0.25s;
+}
+.actionBtn:hover:not(:disabled) { background: rgba(255,255,255,0.06); transform: translateY(-1px); }
+.actionBtn:disabled { opacity: 0.35; cursor: default; }
+
+.iconCircle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.liveRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  background: var(--status-active);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--status-active);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; transform:scale(1.3); } }
+
+.liveText { font-size: 11px; color: var(--secondary-text); font-family: var(--font-mono); }
+
+/* ── Receive card ── */
+.receiveCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.receiveHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.receiveIcon { color: var(--primary); }
+
+.receiveAddress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.receiveAddressText {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--foreground);
+  word-break: break-all;
+}
+
+.copyBtn {
+  color: var(--secondary-text);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.copyBtn:hover { background: rgba(255,255,255,0.06); }
+
+.receiveNote { font-size: 12px; color: var(--secondary-text); margin: 0; line-height: 1.5; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--secondary-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.tab:hover { color: var(--foreground); }
+
+.tabActive {
+  background: rgba(255,255,255,0.06);
+  color: var(--foreground);
+}
+
+.tokenCount {
+  background: var(--primary);
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 20px;
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ── Transaction list ── */
+.txList {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.txRow {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.txRow:last-child { border-bottom: none; }
+.txRow:hover { background: rgba(255,255,255,0.025); }
+.txFailed { opacity: 0.55; }
+
+.txLeft { display: flex; align-items: center; gap: 14px; }
+
+.txIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.txInfo { display: flex; flex-direction: column; gap: 3px; }
+
+.txTitleRow { display: flex; align-items: center; gap: 6px; }
+
+.txTitle { font-size: 14px; font-weight: 700; }
+
+.failedBadge {
+  font-size: 9px;
+  font-weight: 800;
+  background: rgba(255,68,68,0.15);
+  color: #FF4444;
+  border-radius: 4px;
+  padding: 1px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.txMeta { display: flex; align-items: center; gap: 4px; }
+.txTime { font-size: 12px; color: var(--secondary-text); font-family: var(--font-mono); }
+.txComment { font-size: 12px; color: var(--muted-text, #666); }
+
+.txRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-family: var(--font-mono);
+}
+
+.txAmount { font-size: 14px; font-weight: 700; }
+.positive { color: var(--status-active); }
+.negative { color: var(--foreground); }
+.txAmountFailed { opacity: 0.5; text-decoration: line-through; }
+
+.txFee { font-size: 10px; color: var(--muted-text, #666); }
+
+.txExternal { color: var(--muted-text, #666); opacity: 0.6; }
+
+/* ── Token list ── */
+.tokenList {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tokenRow {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.tokenRow:last-child { border-bottom: none; }
+.tokenRow:hover { background: rgba(255,255,255,0.025); }
+
+.tokenLeft { display: flex; align-items: center; gap: 14px; }
+
+.tokenIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.tokenImg { width: 100%; height: 100%; object-fit: cover; }
+
+.tokenInitial {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--secondary-text);
+  font-family: var(--font-mono);
+}
+
+.tokenInfo { display: flex; flex-direction: column; gap: 2px; }
+.tokenSymbolRow { display: flex; align-items: center; gap: 4px; }
+.tokenSymbol { font-size: 15px; font-weight: 700; }
+.verifiedIcon { color: var(--primary); }
+.tokenName { font-size: 12px; color: var(--secondary-text); }
+
+.tokenRight { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-family: var(--font-mono); }
+.tokenBalance { font-size: 15px; font-weight: 700; }
+.tokenUsd { font-size: 12px; color: var(--secondary-text); }
+
+/* ── Empty state ── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  color: var(--secondary-text);
+  font-size: 14px;
+}
+.emptyIcon { opacity: 0.25; }
+
+/* ── Connect CTA ── */
+.connectCta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-xl);
+}
+.ctaIcon { color: var(--primary); opacity: 0.6; }
+.connectCta h3 { font-size: 18px; font-weight: 700; margin: 0; }
+.connectCta p { font-size: 14px; color: var(--secondary-text); margin: 0; line-height: 1.5; }
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .header {
+    padding: 32px 16px 16px;
+  }
+  
+  .title {
+    font-size: 26px;
+  }
+  
+  .content {
+    padding: 0 16px 120px;
+    gap: 16px;
+  }
+  
+  .balanceCard {
+    padding: 20px 20px 16px;
+    gap: 12px;
+  }
+  
+  .amountWhole {
+    font-size: 40px;
+  }
+  
+  .amountDecimals {
+    font-size: 20px;
+  }
+  
+  .currency {
+    font-size: 14px;
+    margin-left: 4px;
+    padding-bottom: 4px;
+  }
+  
+  .usdValue {
+    font-size: 13px;
+    margin-top: -4px;
+  }
+  
+  .actionBtn {
+    padding: 12px 8px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  
+  .iconCircle {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .iconCircle svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .txRow, .tokenRow {
+    padding: 14px 16px;
+  }
+  
+  .txIcon, .tokenIcon {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (max-width: 360px) {
+  .amountWhole {
+    font-size: 32px;
+  }
+  
+  .amountDecimals {
+    font-size: 16px;
+  }
+  
+  .actionBtns {
+    gap: 6px;
+  }
+  
+  .actionBtn {
+    padding: 10px 4px;
+    font-size: 11px;
+  }
+}
