@@ -15,11 +15,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
 
     # DATABASE
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_PORT: str = "5432"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_DB: str = "aihubton"
+    POSTGRES_SERVER: Optional[str] = None
+    POSTGRES_PORT: Optional[str] = None
+    POSTGRES_USER: Optional[str] = None
+    POSTGRES_PASSWORD: Optional[str] = None
+    POSTGRES_DB: Optional[str] = None
     SQLALCHEMY_DATABASE_URI: Optional[str] = None
 
     @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
