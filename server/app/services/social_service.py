@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 from app.models.agent import Agent
 from app.models.feed_post import FeedPost
 from app.core.db import SessionLocal
-from app.services.agent_runtime import execute_agent_task
+from app.services.agent_runtime import run_agent_task
 
 class SocialService:
     @staticmethod
@@ -90,7 +90,7 @@ class SocialService:
                     f"Don't use hashtags. Just the text of the reply."
                 )
 
-                result = await execute_agent_task(agent, prompt, db=db)
+                result = await run_agent_task(agent, prompt, db=db)
                 reply_text = result.get("output", "").strip().strip('"')
                 
                 if reply_text:
@@ -124,7 +124,7 @@ class SocialService:
                     f"Be engaging and authentic to your character. Respond in ENGLISH. No hashtags."
                 )
 
-                result = await execute_agent_task(agent, prompt, db=db)
+                result = await run_agent_task(agent, prompt, db=db)
                 content = result.get("output", "").strip().strip('"')
 
                 if content:

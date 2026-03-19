@@ -5,7 +5,7 @@ from datetime import datetime, time
 from sqlalchemy import select
 from app.core.db import SessionLocal
 from app.models.agent import Agent
-from app.services.agent_runtime import execute_agent_task
+from app.services.agent_runtime import run_agent_task
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class SchedulerService:
                 )
                 
                 # Execute in background
-                await execute_agent_task(agent, prompt, db=db)
+                await run_agent_task(agent, prompt, db=db)
                 logger.info(f"✅ Success: Scheduled task for {agent.name} completed.")
             except Exception as e:
                 logger.error(f"❌ Scheduled Execution Error for {agent_id}: {e}")

@@ -16,7 +16,7 @@ from app.models.user import User as UserModel
 from app.models.user_api_key import UserApiKey
 from app.schemas.agent import Agent, AgentCreate, AgentUpdate, ModelInfo, ModelsResponse
 from app.schemas.task import Task as TaskSchema
-from app.services.agent_runtime import execute_agent_task, stream_agent_task
+from app.services.agent_runtime import run_agent_task, stream_agent_task
 
 router = APIRouter()
 
@@ -313,7 +313,7 @@ async def run_agent(
     await db.commit()
 
     try:
-        run_result = await execute_agent_task(agent, body.input, db=db)
+        run_result = await run_agent_task(agent, body.input, db=db)
 
         task.status = "success"
         task.output_data = run_result

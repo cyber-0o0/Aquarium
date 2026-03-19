@@ -664,9 +664,9 @@ class ScenarioExecutor:
         if not sub_agent:
             raise ScenarioError(f"Sub-agent '{agent_id}' not found")
 
-        from app.services.agent_runtime import execute_agent_task
+        from app.services.agent_runtime import run_agent_task
         run_result = await asyncio.wait_for(
-            execute_agent_task(sub_agent, input_text, db=self.db),
+            run_agent_task(sub_agent, input_text, db=self.db),
             timeout=cfg.timeout_sec,
         )
         ctx.set(cfg.output_var, run_result.get("output", ""))
@@ -720,12 +720,12 @@ async def execute_scenario(
     Load the agent's scenario and execute it.
     Falls back to plain LLM if no scenario configured.
     """
-    from app.services.agent_runtime import execute_agent_task, _resolve_api_key
+    from app.services.agent_runtime import run_agent_task, _resolve_api_key
 
     scenario_data = getattr(agent, "scenario", None)
     if not scenario_data:
         # No scenario — fall back to plain agent runtime
-        result = await execute_agent_task(agent, user_input or "", db=db)
+        result = await run_agent_task(agent, user_input or "", db=db)
         return ScenarioRunResult(
             status="success",
             output=result["output"],
