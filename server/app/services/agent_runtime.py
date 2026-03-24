@@ -222,6 +222,29 @@ class AgentRuntime:
                     description=manifest.get("description", skill.description),
                     args_schema=args_schema,
                 ))
+            elif impl == "mcp":
+                mcp_url = manifest.get("mcp_url")
+                if not mcp_url:
+                    continue
+                
+                async def _mcp_call(_url=mcp_url, _tool_name=tool_name, **kwargs) -> str:
+                    from mcp.client.session import ClientSession
+                    from mcp.client.sse import sse_client
+                    try:
+                        async with sse_client(_url) as (read, write):
+                            async with ClientSession(read, write) as session:
+                                await session.initialize()
+                                result = await session.call_tool(_tool_name, arguments=kwargs)
+                                texts = [c.text for c in getattr(result, "content", []) if getattr(c, "type", "") == "text"]
+                                return "\n".join(texts)
+                    except Exception as e:
+                        return f"MCP call error: {e}"
+
+                tools.append(StructuredTool.from_function(
+                    coroutine=_mcp_call, name=tool_name,
+                    description=manifest.get("description", skill.description),
+                    args_schema=args_schema,
+                ))
         # Add Standard Skills (Default enabled)
         for tool_name in ["get_wallet_balance", "get_wallet_transactions", "set_message_reaction"]:
             fn = BUILTIN_TOOLS.get(tool_name)
@@ -244,6 +267,125 @@ class AgentRuntime:
                         description=f"{description}. Use the wallet address from the context if not provided.",
                     ))
 
+        # Add Social & Cooperation Tools
+        if getattr(self.agent, "is_social_active", False):
+            class PostFeedArgs(BaseModel):
+                content: str = Field(..., description="The content of your post. Keep it engaging.")
+                reply_to_post_id: Optional[int] = Field(None, description="The ID of the post you are replying to, if any.")
+
+            async def _post_feed_tool(content: str, reply_to_post_id: Optional[int] = None) -> str:
+                from app.core.db import AsyncSessionLocal
+                from app.models.feed_post import FeedPost
+                try:
+                    async with AsyncSessionLocal() as _db:
+                        new_post = FeedPost(agent_id=self.agent.id, content=content, post_type="insight", parent_id=reply_to_post_id)
+                        _db.add(new_post)
+                        await _db.commit()
+                        if reply_to_post_id:
+                            return f"Successfully replied to post {reply_to_post_id}!"
+                        return "Successfully posted to the social feed!"
+                except Exception as e:
+                    return f"Failed to post: {e}"
+
+            tools.append(StructuredTool.from_function(
+                coroutine=_post_feed_tool, name="post_to_social_feed",
+                description="Post a message, thought, or status update to the global Agent Social Feed. Other agents and users will see this.",
+                args_schema=PostFeedArgs,
+            ))
+
+            class ReadPostsArgs(BaseModel):
+                limit: int = Field(10, description="The maximum number of recent posts to read.")
+
+            async def _read_posts_tool(limit: int = 10) -> str:
+                from app.core.db import AsyncSessionLocal
+                from sqlalchemy.future import select
+                from app.models.feed_post import FeedPost
+                from sqlalchemy.orm import selectinload
+                try:
+                    async with AsyncSessionLocal() as _db:
+                        res = await _db.execute(
+                            select(FeedPost)
+                            .options(selectinload(FeedPost.agent))
+                            .order_by(FeedPost.created_at.desc())
+                            .limit(limit)
+                        )
+                        posts = res.scalars().all()
+                        if not posts:
+                            return "No recent posts in the feed."
+                        output = []
+                        for p in posts:
+                            author = p.agent.name if p.agent else "Unknown"
+                            reacts = p.reactions or []
+                            react_summary = ", ".join([r.get("emoji", "") for r in reacts]) if reacts else "None"
+                            output.append(f"Post ID: {p.id}\nAuthor: {author}\nContent: {p.content}\nReactions: {react_summary}")
+                        return "\n\n---\n\n".join(output)
+                except Exception as e:
+                    return f"Failed to read posts: {e}"
+
+            tools.append(StructuredTool.from_function(
+                coroutine=_read_posts_tool, name="read_recent_posts",
+                description="Read recent posts from the global Agent Social Feed to see what others are discussing. Returns a list of recent posts with their IDs.",
+                args_schema=ReadPostsArgs,
+            ))
+
+            class ReactPostArgs(BaseModel):
+                post_id: int = Field(..., description="The ID of the post you want to react to.")
+                emoji: str = Field(..., description="A single emoji characterizing your reaction (e.g. '👍', '🔥', '❤️').")
+
+            async def _react_to_post_tool(post_id: int, emoji: str) -> str:
+                from app.core.db import AsyncSessionLocal
+                from sqlalchemy.future import select
+                from app.models.feed_post import FeedPost
+                import sqlalchemy.orm.attributes
+                try:
+                    async with AsyncSessionLocal() as _db:
+                        res = await _db.execute(select(FeedPost).where(FeedPost.id == post_id))
+                        post = res.scalars().first()
+                        if not post:
+                            return f"Post ID {post_id} not found."
+                        
+                        reactions = list(post.reactions) if post.reactions else []
+                        for r in reactions:
+                            if r.get("agent_id") == self.agent.id and r.get("emoji") == emoji:
+                                return f"You already reacted with {emoji} to post {post_id}."
+                        reactions.append({"emoji": emoji, "agent_id": self.agent.id})
+                        post.reactions = reactions
+                        sqlalchemy.orm.attributes.flag_modified(post, "reactions")
+                        
+                        await _db.commit()
+                        return f"Successfully reacted with {emoji} to post {post_id}!"
+                except Exception as e:
+                    return f"Failed to react: {e}"
+
+            tools.append(StructuredTool.from_function(
+                coroutine=_react_to_post_tool, name="react_to_post",
+                description="React to a specific post in the social feed using its Post ID and an emoji.",
+                args_schema=ReactPostArgs,
+            ))
+            
+        async def _ask_agent_tool(target_agent_name: str, query: str) -> str:
+            from app.core.db import AsyncSessionLocal
+            from sqlalchemy.future import select
+            from app.models.agent import Agent as AgentModel
+            try:
+                async with AsyncSessionLocal() as _db:
+                    res = await _db.execute(select(AgentModel).where(AgentModel.name.ilike(f"%{target_agent_name}%")).limit(1))
+                    target_agent = res.scalars().first()
+                    if not target_agent:
+                        return f"Agent '{target_agent_name}' not found."
+                    if target_agent.id == self.agent.id:
+                        return "You cannot ask yourself."
+                    full_query = f"[Incoming query from agent '{self.agent.name}']\n{query}"
+                    result = await run_agent_task(target_agent, full_query, db=_db)
+                    return f"{target_agent.name} answered:\n{result['output']}"
+            except Exception as e:
+                return f"Failed to contact agent: {e}"
+
+        tools.append(StructuredTool.from_function(
+            coroutine=_ask_agent_tool, name="ask_another_agent",
+            description="Ask another AI agent for information, analysis, or help. Provide the agent's name (e.g. 'Wise Sage') and your specific question.",
+        ))
+
         return tools
 
     def get_full_system_prompt(self, memory_ctx: str = "") -> str:
@@ -265,7 +407,15 @@ class AgentRuntime:
         if self.chat_id and self.message_id:
             chat_context = f"\n\n[CHAT CONTEXT]\n- Chat ID: {self.chat_id}\n- Message ID: {self.message_id}\n"
 
-        return (self.agent.system_prompt or "You are a helpful assistant.") + memory_ctx + wallet_context + chat_context + format_instruction
+        social_context = ""
+        if getattr(self.agent, "is_social_active", False):
+            social_context = (
+                "\n\n[SOCIAL NETWORK INSTRUCTIONS]\n"
+                "You are an active participant in the AI Social Network (Feed).\n"
+                "Use 'read_recent_posts' to check what others are thinking, 'post_to_social_feed' to share your thoughts or reply, and 'react_to_post' to leave emojis."
+            )
+
+        return (self.agent.system_prompt or "You are a helpful assistant.") + memory_ctx + wallet_context + chat_context + social_context + format_instruction
 
     def _build_messages(self, input_text: str, memory_ctx: str = "") -> list:
         system_prompt = self.get_full_system_prompt(memory_ctx=memory_ctx)
@@ -366,10 +516,6 @@ class AgentRuntime:
                         yield {"type": "token", "content": content}
                     tokens_used += _extract_tokens(chunk)
                 yield {"type": "done", "tools_used": [], "tokens_used": tokens_used}
-                # Постинг в ленту (простой режим)
-                if accumulated:
-                    content_preview = (accumulated[:200] + "...") if len(accumulated) > 200 else accumulated
-                    asyncio.create_task(_add_feed_post(self.agent.id, content_preview))
             except Exception as e:
                 yield {"type": "error", "message": str(e)}
             return
@@ -449,34 +595,8 @@ class AgentRuntime:
                 update_memory(self.agent.id, input_text, accumulated)
             )
 
-            # --- Добавляем пост в ленту агентов ---
-            if accumulated:
-                # Берем кусок результата как "мысль" для ленты
-                # В идеале здесь можно вызвать LLM еще раз, чтобы она написала "краткий пост"
-                # Но для скорости берем первые 200 символов
-                content_preview = (accumulated[:200] + "...") if len(accumulated) > 200 else accumulated
-                asyncio.create_task(_add_feed_post(self.agent.id, content_preview))
-
         except Exception as e:
             yield {"type": "error", "message": str(e)}
-
-async def _add_feed_post(agent_id: str, content: str):
-    """
-    Вспомогательная функция для создания поста в фоне.
-    """
-    from app.core.db import SessionLocal
-    async with SessionLocal() as db:
-        try:
-            new_post = FeedPost(
-                agent_id=agent_id,
-                content=content,
-                post_type="insight"
-            )
-            db.add(new_post)
-            await db.commit()
-        except Exception as e:
-            print(f"❌ Failed to auto-post to feed: {e}")
-
 
 def _extract_tokens(response) -> int:
     if response is None:

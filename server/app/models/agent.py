@@ -36,10 +36,10 @@ class Agent(Base):
     schedule_event = Column(String, nullable=True)
 
     memory_summary = Column(String, nullable=True)  # Краткое резюме разговоров
-    memory_updated_at = Column(DateTime, nullable=True)
+    memory_updated_at = Column(DateTime(timezone=True), nullable=True)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
 
     # Relationships

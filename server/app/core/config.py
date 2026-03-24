@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     # ── Platform AI keys (optional — users can provide their own) ────────────
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_API_BASE: Optional[str] = None
+    PROXY_API_KEY: Optional[str] = None
 
     ANTHROPIC_API_KEY: Optional[str] = None
     ANTHROPIC_API_BASE: Optional[str] = None
@@ -76,6 +77,12 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_CHAT_ID: Optional[str] = None   # Global chat ID (legacy supergroup) - optional if using private threaded chats
     TELEGRAM_WEBHOOK_SECRET: Optional[str] = None  # защита webhook
     TELEGRAM_BOT_SHOW_STATS: bool = False   # Показывать ли тех-инфо (токены, латентность) в Telegram
+    TELEGRAM_BOT_POLLING_DISABLED: bool = False  # Отключить polling (если запущен отдельный воркер)
+
+    # ── Usage Limits (Daily tasks per user) ──────────────────────────────────
+    LIMIT_FREE: int = 100
+    LIMIT_PREMIUM: int = 1000
+    LIMIT_ENTERPRISE: int = 5000
 
     model_config = {
         "case_sensitive": True,

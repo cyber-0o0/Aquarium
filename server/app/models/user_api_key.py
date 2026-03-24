@@ -31,8 +31,8 @@ class UserApiKey(Base):
     # AES-encrypted key stored as Fernet token string
     encrypted_key = Column(String, nullable=False)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     # One key per provider per user (can be overridden by updating)
     __table_args__ = (

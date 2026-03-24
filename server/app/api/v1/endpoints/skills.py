@@ -216,3 +216,86 @@ async def publish_skill(
     await db.commit()
     await db.refresh(skill)
     return skill
+
+
+# ── MCP (Model Context Protocol) ──────────────────────────────────────────────
+
+from pydantic import BaseModel
+
+class MCPInspectRequest(BaseModel):
+    mcp_url: str
+
+class MCPInstallRequest(BaseModel):
+    agent_id: str
+    mcp_url: str
+    tool_name: str
+    description: str
+    input_schema: dict
+
+@router.post("/mcp/inspect", status_code=200)
+async def inspect_mcp_server(body: MCPInspectRequest) -> Any:
+    from mcp.client.session import ClientSession
+    from mcp.client.sse import sse_client
+    
+    tools_info = []
+    try:
+        async with sse_client(body.mcp_url) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                tools_res = await session.list_tools()
+                for t in tools_res.tools:
+                    tools_info.append({
+                        "name": getattr(t, "name", "unknown"),
+                        "description": getattr(t, "description", ""),
+                        "inputSchema": getattr(t, "inputSchema", {}),
+                    })
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to inspect MCP server: {e}")
+    
+    return {"tools": tools_info}
+
+@router.post("/mcp/install", status_code=200)
+async def install_mcp_skill(
+    body: MCPInstallRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(deps.get_current_user),
+) -> Any:
+    agent_res = await db.execute(select(AgentModel).where(AgentModel.id == body.agent_id, AgentModel.user_id == current_user.id))
+    agent = agent_res.scalars().first()
+    if not agent:
+         raise HTTPException(status_code=404, detail="Agent not found")
+         
+    import hashlib
+    slug_base = f"mcp-{body.mcp_url}-{body.tool_name}".encode()
+    slug = hashlib.md5(slug_base).hexdigest()
+    
+    skill_res = await db.execute(select(SkillModel).where(SkillModel.slug == slug))
+    skill = skill_res.scalars().first()
+    
+    if not skill:
+        manifest = {
+            "tool_name": body.tool_name,
+            "implementation": "mcp",
+            "mcp_url": body.mcp_url,
+            "parameters": body.input_schema.get("properties", {}),
+            "required": body.input_schema.get("required", [])
+        }
+        skill = SkillModel(
+            name=body.tool_name,
+            slug=slug,
+            description=(body.description or body.tool_name)[:2048],
+            category="mcp",
+            manifest=manifest,
+            author_id=current_user.id,
+            review_status="approved",
+            icon_url=None,
+        )
+        db.add(skill)
+        await db.flush()
+        
+    if skill not in agent.skills:
+        agent.skills.append(skill)
+        skill.installs += 1
+        await db.commit()
+        
+    return {"status": "installed", "skill_id": skill.id}

@@ -34,8 +34,8 @@ class Skill(Base):
     review_status = Column(String, default="approved")  # pending, approved, rejected
     author_id = Column(String, nullable=True)           # user id or "system"
 
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
     # Relationships
     agents = relationship(
@@ -54,6 +54,6 @@ class SkillReview(Base):
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     rating = Column(Integer, nullable=False)        # 1-5
     comment = Column(String(1024), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     skill = relationship("Skill", back_populates="reviews")

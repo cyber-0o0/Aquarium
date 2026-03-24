@@ -468,6 +468,36 @@ async def ton_staking_pools(available_for: str = "", limit: int = 10) -> str:
         return f"TON staking pools error: {e}"
 
 
+# ── Actionable Transactions ────────────────────────────────────────────────────
+
+import urllib.parse
+
+async def prepare_ton_transfer(destination: str, amount_ton: float, comment: str = "") -> str:
+    """
+    Prepare a TON transfer link for the user to sign. Use this when the user asks to send/transfer TON.
+    
+    Args:
+        destination: The TON wallet address to send to.
+        amount_ton: The amount of TON to send (e.g., 1.5). Max 100 TON safely.
+        comment: Optional text comment for the transaction.
+    """
+    try:
+        amt = float(amount_ton)
+        if amt <= 0:
+            return "Error: Amount must be positive."
+        if amt > 100:
+            return "Error: For security, the maximum transfer amount is 100 TON."
+            
+        nanotons = int(amt * 1e9)
+        url = f"ton://transfer/{destination}?amount={nanotons}"
+        if comment:
+            url += f"&text={urllib.parse.quote(comment)}"
+            
+        return f"Transaction prepared. Present this link directly to the user to sign: {url}"
+    except Exception as e:
+        return f"Transaction preparation error: {e}"
+
+
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 TON_DEFI_TOOLS = {
@@ -483,4 +513,5 @@ TON_DEFI_TOOLS = {
     "jetton_holders":       jetton_holders,
     "ton_account_info":     ton_account_info,
     "ton_staking_pools":    ton_staking_pools,
+    "prepare_ton_transfer": prepare_ton_transfer,
 }

@@ -14,6 +14,8 @@ httpx
 redis
 aiosqlite
 pytest-asyncio
+mcp
+mcp
 
 # LangChain core
 langchain

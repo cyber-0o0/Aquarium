@@ -10,4 +10,4 @@ class ModelStatus(Base):
     status = Column(String)                # 'active', 'unstable', 'offline'
     latency = Column(Float, nullable=True) # In seconds
     error = Column(String, nullable=True)
-    last_checked = Column(DateTime, default=lambda: datetime.now(UTC))
+    last_checked = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))

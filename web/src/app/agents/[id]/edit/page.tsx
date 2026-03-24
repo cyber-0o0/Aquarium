@@ -12,6 +12,7 @@ import { Agent, ModelInfo } from "@/types/agent";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AGENT_EMOJIS } from "@/constants/emojis";
 
+
 export default function EditAgentPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -106,6 +107,10 @@ export default function EditAgentPage() {
 
   const set = (key: string, val: any) =>
     setFormData((f) => f ? { ...f, [key]: val } : f);
+
+  const handleSocialToggle = (checked: boolean) => {
+    setFormData(f => f ? { ...f, is_social_active: checked } : f);
+  };
 
   const handleSave = () => {
     if (!formData?.name?.trim()) { setError("Agent name is required"); return; }
@@ -258,7 +263,7 @@ export default function EditAgentPage() {
               <input
                 type="checkbox"
                 checked={formData.is_social_active}
-                onChange={(e) => set("is_social_active", e.target.checked)}
+                onChange={(e) => handleSocialToggle(e.target.checked)}
               />
               <span className={clsx(styles.slider, styles.round)}></span>
             </label>

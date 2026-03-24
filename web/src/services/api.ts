@@ -146,6 +146,14 @@ export const skillsApi = {
     const { data } = await apiClient.delete('skills/uninstall', { data: { agent_id: agentId, skill_id: skillId } });
     return data;
   },
+  mcpInspect: async (mcpUrl: string) => {
+    const { data } = await apiClient.post('skills/mcp/inspect', { mcp_url: mcpUrl });
+    return data;
+  },
+  mcpInstall: async (payload: { agent_id: string; mcp_url: string; tool_name: string; description: string; input_schema: any }) => {
+    const { data } = await apiClient.post('skills/mcp/install', payload);
+    return data;
+  },
 };
 
 // ── API Keys ──────────────────────────────────────────────────────────────────

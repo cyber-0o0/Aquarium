@@ -170,8 +170,24 @@ export const TelegramProvider = ({ children }: { children: ReactNode }) => {
         try { init(); } catch (e) { console.warn('[TG SDK] init() failed (not in Telegram?):', e); }
 
         viewport.mount()
-          .then(() => { viewport.bindCssVars(); if (!viewport.isExpanded()) viewport.expand(); })
-          .catch(() => {});
+          .then(() => { 
+            viewport.bindCssVars(); 
+            if (!viewport.isExpanded()) viewport.expand(); 
+            
+            // ── Request Fullscreen ──
+            const tg = (window as any).Telegram?.WebApp;
+            if (tg && typeof tg.requestFullscreen === 'function') {
+                try {
+                    tg.requestFullscreen();
+                    console.log('[TG SDK] Fullscreen requested');
+                } catch (e) {
+                    console.warn('[TG SDK] Fullscreen request failed:', e);
+                }
+            } else if (tg) {
+                // Fallback to expand if requestFullscreen is not available
+                tg.expand();
+            }
+          })
 
         if (themeParams.mount.isAvailable()) {
           themeParams.mount();

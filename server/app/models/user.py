@@ -11,8 +11,8 @@ class User(Base):
     username = Column(String, nullable=True)
     wallet_address = Column(String, unique=True, index=True, nullable=True)
     plan = Column(String, default="free") # free, premium, enterprise
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
-    updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     
     # Store user preferences or metadata
     user_metadata = Column(JSON, nullable=True)

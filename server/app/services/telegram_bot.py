@@ -124,6 +124,9 @@ _TOOL_LABELS = {
     "ton_staking_pools": "🏦 Staking",
     "get_wallet_balance": "💎 Wallet Balance",
     "get_wallet_transactions": "📋 Wallet Transactions",
+    "prepare_ton_transfer": "💸 Prepare Transfer",
+    "post_to_social_feed": "🌍 Post to Feed",
+    "ask_another_agent": "🤖 Ask Agent",
 }
 
 
@@ -259,6 +262,7 @@ async def send_to_topic(
     reply_to_message_id: Optional[int] = None,
     chat_id: Optional[str] = None,
     quote: Optional[str] = None,
+    reply_markup: Optional[Dict] = None,
 ) -> Optional[int]:
     if not text:
         return None
@@ -286,6 +290,8 @@ async def send_to_topic(
         "text": text,
         "parse_mode": parse_mode,
     }
+    if reply_markup is not None:
+        kwargs["reply_markup"] = reply_markup
 
     if reply_to_message_id:
         if quote:
@@ -310,17 +316,21 @@ async def send_to_topic(
     return result.get("message_id") if result else None
 
 
-async def edit_message(chat_id: str, message_id: int, text: str, parse_mode: str = "HTML") -> bool:
+async def edit_message(chat_id: str, message_id: int, text: str, parse_mode: str = "HTML", reply_markup: Optional[Dict] = None) -> bool:
     if len(text) > 4096:
         text = text[:4090] + "..."
     
     if parse_mode == "HTML":
         text = _format_html(text)
         
-    result = await _call(
-        "editMessageText", chat_id=chat_id, message_id=message_id, 
-        text=text, parse_mode=parse_mode
-    )
+    kwargs = {
+        "chat_id": chat_id, "message_id": message_id,
+        "text": text, "parse_mode": parse_mode
+    }
+    if reply_markup is not None:
+        kwargs["reply_markup"] = reply_markup
+        
+    result = await _call("editMessageText", **kwargs)
     return result is not None
 
 
@@ -331,6 +341,12 @@ async def send_task_result(
 ) -> None:
     header = "✅ *Done*" if status == "success" else "❌ *Error*"
     parts = [f"{header}\n\n{output}"]
+
+    # Extract ton:// links for InlineKeyboard
+    reply_markup = None
+    ton_links = re.findall(r'(ton://transfer/[a-zA-Z0-9\-_]+(?:\?[^\s&<"\'\n]+(?:&[^\s&<"\'\n]+)*)?)', output)
+    if ton_links:
+        reply_markup = {"inline_keyboard": [[{"text": "💎 Sign Transaction", "url": ton_links[0]}]]}
 
     footer = []
     if tools_used:
@@ -344,7 +360,7 @@ async def send_task_result(
         parts.append("\n" + "  ".join(footer))
 
     await send_to_topic(thread_id, "".join(parts),
-                        reply_to_message_id=reply_to_message_id, chat_id=chat_id)
+                        reply_to_message_id=reply_to_message_id, chat_id=chat_id, reply_markup=reply_markup)
 
 
 # ── Streaming handler ─────────────────────────────────────────────────────────
@@ -426,8 +442,14 @@ async def _stream_agent_to_topic(
         if len(final_text) > 4096:
             final_text = final_text[:4090] + "\n…"
 
+        # Extract ton:// links for InlineKeyboard
+        reply_markup = None
+        ton_links = re.findall(r'(ton://transfer/[a-zA-Z0-9\-_]+(?:\?[^\s&<"\'\n]+(?:&[^\s&<"\'\n]+)*)?)', accumulated)
+        if ton_links:
+            reply_markup = {"inline_keyboard": [[{"text": "💎 Sign Transaction", "url": ton_links[0]}]]}
+
         # Send final version (important even if no changes, to ensure no "typing" artifacts)
-        await edit_message(target, placeholder_id, final_text)
+        await edit_message(target, placeholder_id, final_text, reply_markup=reply_markup)
 
         task.status = "success"
         task.output_data = {"output": accumulated, "tools_used": list(dict.fromkeys(tools_used))}
@@ -447,18 +469,84 @@ async def _stream_agent_to_topic(
         await db.commit()
 
 
+# ── Voice Transcription ───────────────────────────────────────────────────────
+
+async def _transcribe_voice(file_id: str) -> Optional[str]:
+    file_info = await _call("getFile", file_id=file_id)
+    if not file_info or "file_path" not in file_info:
+        return None
+        
+    file_path = file_info["file_path"]
+    download_url = f"https://api.telegram.org/file/bot{settings.TELEGRAM_BOT_TOKEN}/{file_path}"
+    
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.get(download_url)
+        if resp.status_code != 200: return None
+        audio_content = resp.content
+
+    # Use OpenAI API (from settings) or fallback to ProxyAPI if not specified
+    base_url = settings.OPENAI_API_BASE or "https://api.openai.com/v1"
+    api_key = settings.OPENAI_API_KEY or settings.PROXY_API_KEY
+    
+    if not api_key:
+        logger.error("Transcription failed: No OpenAI API key or ProxyAPI key configured in .env.")
+        return None
+
+    # Construct the full transcription URL
+    url = f"{base_url.rstrip('/')}/audio/transcriptions"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    files = {"file": ("voice.oga", audio_content, "audio/ogg")}
+    # Model: use gpt-4o-mini-audio-preview or whisper-1
+    # User might want to configure this too, but whisper-1 is standard for transcription
+    data = {"model": "whisper-1"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(url, headers=headers, data=data, files=files)
+            if resp.status_code == 200:
+                return resp.json().get("text", "")
+            logger.error("Transcription error [%s]: %s", resp.status_code, resp.text)
+            return f"❌ Transcription error: {resp.status_code}"
+    except Exception as e:
+        logger.exception("Transcription exception: %s", e)
+        return f"❌ Transcription exception: {str(e)}"
+
 # ── handle_update ─────────────────────────────────────────────────────────────
 
-async def handle_update(update: Dict[str, Any], db) -> None:
+async def handle_update(update: Dict[str, Any], db, source: str = "webhook") -> None:
+    logger.info("📩 Handling Telegram update [%s] from %s", update.get("update_id"), source)
     message = (update.get("message") or update.get("channel_post") or update.get("edited_message"))
     if not message:
         return
 
     thread_id = message.get("message_thread_id")
-    text = (message.get("text") or "").strip()
+    text = (message.get("text") or message.get("caption") or "").strip()
     message_id = message.get("message_id", 0)
     tg_user_id = str((message.get("from") or {}).get("id", ""))
     chat_id = str(message.get("chat", {}).get("id", ""))
+
+    if "voice" in message:
+        voice = message["voice"]
+        if voice.get("duration", 0) > 60:
+            await _call("sendMessage", chat_id=chat_id, text="⚠️ Voice message too long (limit: 60s).", reply_to_message_id=message_id, message_thread_id=thread_id)
+            return
+            
+        await _call("sendChatAction", chat_id=chat_id, action="typing", message_thread_id=thread_id)
+        transcription = await _transcribe_voice(voice["file_id"])
+        
+        if not transcription:
+            await _call("sendMessage", chat_id=chat_id, text="❌ Failed to download or transcribe voice.", reply_to_message_id=message_id, message_thread_id=thread_id)
+            return
+        if transcription and transcription.startswith("❌"):
+            # If it's a diagnostic error from the transcription service (not used currently but for safety)
+            await _call("sendMessage", chat_id=chat_id, text="⚠ Could not transcribe audio. Please try again or type your message.", reply_to_message_id=message_id, message_thread_id=thread_id)
+            return
+            
+        # Proceed only if we have text
+        text = transcription
+
+    if not text:
+        return
 
     if text.startswith("/"):
         await _handle_command(message, thread_id, tg_user_id, db)
@@ -491,6 +579,19 @@ async def handle_update(update: Dict[str, Any], db) -> None:
             await db.refresh(agent)
     
     if not agent: return
+
+    from app.services.limit_service import LimitService
+    is_allowed, usage, user_limit = await LimitService.check_user_limit(user, db)
+    if not is_allowed:
+        await _call("sendChatAction", chat_id=chat_id, action="typing", message_thread_id=thread_id)
+        # Give a friendly, generous feedback
+        msg = (
+            f"🚧 *Status: Limit Reached*\n\n"
+            f"You've used all your daily AI credits ({usage}/{user_limit}).\n"
+            f"Please wait 24h or upgrade to *Premium* in the Mini App for 10x more power! 🚀"
+        )
+        await send_to_topic(thread_id, msg, parse_mode="Markdown", reply_to_message_id=message_id, chat_id=chat_id)
+        return
 
     await _call("sendChatAction", chat_id=chat_id, action="typing", message_thread_id=thread_id)
 
@@ -599,7 +700,7 @@ async def _handle_command(message: Dict, thread_id: Optional[int], tg_user_id: s
         from app.models.user import User as UserModel
         res = await db.execute(select(AgentModel).join(UserModel).where(UserModel.telegram_id == tg_user_id)) 
         for a in res.scalars().all():
-            new_thread = await create_agent_topic(a.name, a.id, chat_id=chat_id)
+            new_thread = await create_agent_topic(a.name, a.id, chat_id=chat_id, emoji=a.avatar_emoji or "🤖")
             if new_thread:
                 a.tg_thread_id = new_thread
         await db.commit()
@@ -667,6 +768,13 @@ async def start_polling(stats: Optional[Dict[str, Any]] = None):
     from app.core.db import AsyncSessionLocal
     offset = 0
     print("🚀 Polling started", file=sys.stderr)
+    
+    # ── Важно: удаляем webhook перед запуском polling, чтобы не было дублей ────────
+    try:
+        await delete_webhook(drop_pending_updates=True)
+        print("🗑 Webhook deleted for polling mode.", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️ Could not delete webhook: {e}", file=sys.stderr)
 
     while True:
         if stats is not None:
@@ -691,7 +799,7 @@ async def start_polling(stats: Optional[Dict[str, Any]] = None):
                         offset = update["update_id"] + 1
                         async with AsyncSessionLocal() as db:
                             try:
-                                await handle_update(update, db)
+                                await handle_update(update, db, source="polling")
                             except Exception as e:
                                 print(f"❌ Update error: {e}", file=sys.stderr)
                 else:

@@ -79,19 +79,52 @@ export default function FeedPage() {
           </div>
         ) : (
           roots.map((post) => (
-            <div key={post.id} className={styles.threadWrapper}>
-              <PostItem post={post} />
-              
-              {/* Replies */}
-              <div className={styles.replyThread}>
-                {getReplies(post.id).map(reply => (
-                    <PostItem key={reply.id} post={reply} isReply />
-                ))}
-              </div>
-            </div>
+            <ThreadView key={post.id} post={post} replies={getReplies(post.id)} />
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+function ThreadView({ post, replies }: { post: FeedPost, replies: FeedPost[] }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className={styles.threadWrapper}>
+      <PostItem post={post} />
+      
+      {replies.length > 0 && (
+        <div style={{ marginLeft: 32, marginBottom: 12, marginTop: -8 }}>
+          <button 
+            onClick={() => setExpanded(!expanded)}
+            style={{ 
+              fontSize: 13, 
+              background: 'none', 
+              border: 'none', 
+              color: 'var(--primary)', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 6,
+              padding: '6px 12px',
+              borderRadius: 6,
+              fontWeight: 500
+            }}
+          >
+            <MessageSquare size={14} />
+            {expanded ? 'Hide replies' : `Show ${replies.length} repl${replies.length === 1 ? 'y' : 'ies'}`}
+          </button>
+        </div>
+      )}
+
+      {expanded && replies.length > 0 && (
+        <div className={styles.replyThread}>
+          {replies.map(reply => (
+              <PostItem key={reply.id} post={reply} isReply />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -109,11 +142,7 @@ function PostItem({ post, isReply = false }: { post: FeedPost, isReply?: boolean
     <div className={clsx(styles.post, isReply && styles.postReply)}>
       <div className={styles.postHeader}>
         <div className={styles.avatar}>
-          {agent?.avatar_url ? (
-            <img src={agent.avatar_url} alt="" />
-          ) : (
-            <span>{agent?.avatar_emoji || agentEmoji(agent?.name) || '🤖'}</span>
-          )}
+          <span style={{ fontSize: 24 }}>{agent?.avatar_emoji || agent?.avatar_url || agentEmoji(agent?.name) || '🤖'}</span>
         </div>
         <div>
             <div className={styles.agentName}>{agent?.name || 'Anonymous Agent'}</div>

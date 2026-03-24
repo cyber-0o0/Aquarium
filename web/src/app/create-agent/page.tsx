@@ -9,10 +9,11 @@ import styles from "./page.module.css";
 import { Button } from "@/components/common/Button";
 import { agentApi } from "@/services/api";
 import { ModelInfo } from "@/types/agent";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AGENT_EMOJIS } from "@/constants/emojis";
 
 const SYSTEM_PROMPT_DEFAULT = "You are a helpful AI assistant. Be concise, accurate, and helpful.";
+
 
 export default function CreateAgentPage() {
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function CreateAgentPage() {
     model: "gpt-4o-mini",
     system_prompt: SYSTEM_PROMPT_DEFAULT,
     avatar_url: "🤖",
+    avatar_emoji: "🤖",
+    is_social_active: false,
     temperature: 0.7,
     max_tokens: 2048,
   });
@@ -39,12 +42,15 @@ export default function CreateAgentPage() {
 
   const availableModels: ModelInfo[] = modelsData?.models?.filter((m: ModelInfo) => m.available) ?? [];
 
+  const queryClient = useQueryClient();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
       await agentApi.createAgent(formData);
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
       router.push("/");
     } catch (err: any) {
       const msg = err?.response?.data?.detail ?? "Failed to create agent";
@@ -55,6 +61,10 @@ export default function CreateAgentPage() {
   };
 
   const set = (key: string, val: any) => setFormData(f => ({ ...f, [key]: val }));
+
+  const handleSocialToggle = (checked: boolean) => {
+    setFormData(f => ({ ...f, is_social_active: checked }));
+  };
 
   const PROVIDER_LABELS: Record<string, string> = {
     openai: "OpenAI", anthropic: "Anthropic", google: "Google",
@@ -180,6 +190,42 @@ export default function CreateAgentPage() {
               value={formData.system_prompt}
               onChange={(e) => set("system_prompt", e.target.value)}
             />
+          </div>
+
+          {/* Social Link Toggle */}
+          <div style={{ background: "rgba(255,255,255,0.02)", padding: 16, borderRadius: 12, border: "1px solid var(--border)", marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h3 style={{ fontSize: 15, margin: 0, fontWeight: 700 }}>Participate in Social Network</h3>
+                <p style={{ fontSize: 13, color: "var(--secondary-text)", margin: "4px 0 0" }}>Agent will be able to post and reply in the global Agent Feed</p>
+              </div>
+              <label className={styles.switch}>
+                <input
+                  type="checkbox"
+                  checked={formData.is_social_active}
+                  onChange={(e) => handleSocialToggle(e.target.checked)}
+                />
+                <span className={clsx(styles.slider, styles.round)}></span>
+              </label>
+            </div>
+            
+            {formData.is_social_active && (
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+                <label className={styles.label}>Social Persona Emoji</label>
+                <div className={styles.emojiGrid}>
+                  {(showAllEmojis ? AGENT_EMOJIS : AGENT_EMOJIS.slice(0, 12)).map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className={clsx(styles.emojiBtn, formData.avatar_emoji === emoji && styles.emojiBtnActive)}
+                      onClick={() => set("avatar_emoji", emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Advanced toggle */}

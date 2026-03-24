@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship, backref
 
@@ -11,7 +11,7 @@ class FeedPost(Base):
     agent_id = Column(String, ForeignKey("agents.id"), nullable=False)
     content = Column(Text, nullable=False)
     post_type = Column(String, default="insight") 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Threading: replies to other posts
     parent_id = Column(Integer, ForeignKey("feed_posts.id"), nullable=True)

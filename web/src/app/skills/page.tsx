@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Check, Star, ChevronDown, Zap, Package, Trash2 } from "lucide-react";
+import { Search, Check, Star, ChevronDown, Zap, Package, Trash2, Server } from "lucide-react";
 import styles from "./page.module.css";
 import { clsx } from "clsx";
 import { Button } from "@/components/common/Button";
@@ -35,6 +35,7 @@ export default function SkillsPage() {
   const [search, setSearch] = useState("");
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [showAgentPicker, setShowAgentPicker] = useState(false);
+  const [showMcpModal, setShowMcpModal] = useState(false);
 
   const { data: skills = [], isLoading } = useQuery<Skill[]>({
     queryKey: ["skills", selectedCat, search],
@@ -132,10 +133,16 @@ export default function SkillsPage() {
 
   return (
     <>
+      <McpModal isOpen={showMcpModal} onClose={() => setShowMcpModal(false)} selectedAgent={selectedAgent} />
       <header className={styles.header}>
         <div className={styles.headerTop}>
-          <h1 className={styles.title}>Skills Market</h1>
-          <span className={styles.countBadge}>{skills.length}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <h1 className={styles.title}>Skills Market</h1>
+            <span className={styles.countBadge}>{skills.length}</span>
+          </div>
+          <Button variant="outline" onClick={() => setShowMcpModal(true)} className={styles.mcpBtn}>
+            <Server size={14} style={{ marginRight: 6 }} /> MCP
+          </Button>
         </div>
 
         {/* Agent picker */}
@@ -288,6 +295,102 @@ function SkillSkeleton() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Skeleton width="100px" height="18px" borderRadius="20px" />
         <Skeleton width="80px" height="34px" borderRadius="10px" />
+      </div>
+    </div>
+  );
+}
+
+function McpModal({ isOpen, onClose, selectedAgent }: { isOpen: boolean, onClose: () => void, selectedAgent: Agent | null }) {
+  const qc = useQueryClient();
+  const [url, setUrl] = useState("");
+  const [inspecting, setInspecting] = useState(false);
+  const [tools, setTools] = useState<any[]>([]);
+  const [error, setError] = useState("");
+  const [installingTool, setInstallingTool] = useState<string | null>(null);
+
+  if (!isOpen) return null;
+
+  const handleInspect = async () => {
+    if (!url) return;
+    setInspecting(true); setError(""); setTools([]);
+    try {
+      const res = await skillsApi.mcpInspect(url);
+      setTools(res.tools || []);
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || e.message || "Failed to inspect MCP server");
+    } finally {
+      setInspecting(false);
+    }
+  };
+
+  const handleInstallTool = async (t: any) => {
+    if (!selectedAgent) return;
+    setInstallingTool(t.name);
+    try {
+      await skillsApi.mcpInstall({
+        agent_id: selectedAgent.id,
+        mcp_url: url,
+        tool_name: t.name,
+        description: t.description || t.name,
+        input_schema: t.inputSchema || {}
+      });
+      alert(`Installed: ${t.name}`);
+      qc.invalidateQueries({ queryKey: ["agent-skills", selectedAgent.id] });
+    } catch (e: any) {
+      alert("Install failed: " + (e?.response?.data?.detail || e.message));
+    } finally {
+      setInstallingTool(null);
+    }
+  };
+
+  return (
+    <div className={styles.mcpModalOverlay}>
+      <div className={styles.mcpModal}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700 }}>Connect MCP Server</h2>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", color: "var(--secondary-text)", cursor: "pointer", fontSize: 20 }}>✕</button>
+        </div>
+        
+        {!selectedAgent ? (
+          <p style={{ color: "#ff5c5c", fontSize: 14 }}>Please select an agent first (on main screen) to install tools.</p>
+        ) : (
+           <p style={{ color: "var(--secondary-text)", fontSize: 13, marginBottom: 14 }}>Installing to: <b style={{color: "var(--primary)"}}>{selectedAgent.name}</b></p>
+        )}
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <input 
+             className={styles.searchInput} 
+             style={{ border: "1px solid var(--border)", padding: "10px", borderRadius: 10, flex: 1 }}
+             placeholder="https://.../sse" 
+             value={url} 
+             onChange={e => setUrl(e.target.value)} 
+          />
+          <Button variant="primary" onClick={handleInspect} loading={inspecting}>Inspect</Button>
+        </div>
+
+        {error && <p style={{ color: "#ff5c5c", fontSize: 13, marginBottom: 16 }}>{error}</p>}
+
+        {tools.length > 0 && <p style={{ fontSize: 12, color: "var(--secondary-text)", marginBottom: 8 }}>Found {tools.length} tools:</p>}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 300, overflowY: "auto" }}>
+          {tools.map(t => (
+             <div key={t.name} style={{ background: "rgba(255,255,255,0.05)", padding: 14, borderRadius: 12 }}>
+               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                 <h4 style={{ margin: 0, fontSize: 15 }}>{t.name}</h4>
+                 <Button 
+                   variant="outline" 
+                   disabled={!selectedAgent || installingTool !== null} 
+                   loading={installingTool === t.name}
+                   onClick={() => handleInstallTool(t)}
+                   className={styles.mcpInstallBtn}
+                 >
+                   + Install
+                 </Button>
+               </div>
+               <p style={{ margin: 0, fontSize: 13, color: "var(--secondary-text)" }}>{t.description || "No description provided."}</p>
+             </div>
+          ))}
+        </div>
       </div>
     </div>
   );

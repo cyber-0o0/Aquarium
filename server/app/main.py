@@ -80,8 +80,8 @@ async def startup_event():
     # 2. Start Agent Scheduler (Daily activations based on cron field)
     asyncio.create_task(SchedulerService.run_scheduler())
 
-    # 3. Start Telegram Bot Polling (if no webhook configured)
-    if settings.TELEGRAM_BOT_TOKEN:
+    # 3. Start Telegram Bot Polling (if not disabled and token provided)
+    if settings.TELEGRAM_BOT_TOKEN and not settings.TELEGRAM_BOT_POLLING_DISABLED:
         asyncio.create_task(start_polling())
         print("🚀 Telegram Bot polling started.")
 

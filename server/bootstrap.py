@@ -29,6 +29,8 @@ async def main():
     from app.models.agent_skill import agent_skill_association  # noqa
 
     async with engine.begin() as conn:
+        print("    (Dropping old tables if exist to apply schema changes...)")
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     print("    ✅ Tables created")
 
