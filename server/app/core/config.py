@@ -87,6 +87,7 @@ class Settings(BaseSettings):
     model_config = {
         "case_sensitive": True,
         "env_file": (".env", "../.env"),  # works whether launched from app/ or server/
+        "extra": "ignore",
     }
 
 
