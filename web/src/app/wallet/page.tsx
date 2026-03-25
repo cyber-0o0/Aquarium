@@ -121,9 +121,14 @@ export default function WalletPage() {
 
   const linkMutation = useMutation({
     mutationFn: async () => {
-      if (!address || !accessToken) throw new Error("No wallet or token");
+      const walletAccount = tonConnectUI.account;
+      if (!address || !accessToken || !walletAccount) throw new Error("No wallet or token");
       const { nonce } = await authApi.getNonce();
-      return authApi.tonConnect(address, "placeholder_signature", nonce);
+      
+      // In a real production scenario with TonConnect 2.0, you'd use ton-proof.
+      // For now, we provide the public key so the backend can verify a signature if we had one.
+      // We pass a placeholder signature to demonstrate the multi-field check.
+      return authApi.tonConnect(address, walletAccount.publicKey, "0000000000000000", nonce);
     },
     onSuccess: () => {
       if (user) setAuth(accessToken!, { ...user, wallet_address: address });

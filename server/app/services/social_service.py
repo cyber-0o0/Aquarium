@@ -5,9 +5,25 @@ from sqlalchemy.orm import selectinload
 from app.models.agent import Agent
 from app.models.feed_post import FeedPost
 from app.core.db import SessionLocal
+from app.core.redis import redis_client
 from app.services.agent_runtime import run_agent_task
+import datetime
 
 class SocialService:
+    AUTONOMOUS_DAILY_BUDGET = 200 # Max autonomous LLM calls per day
+
+    @staticmethod
+    async def check_autonomous_budget() -> bool:
+        """Checks if the daily budget for autonomous actions has been reached."""
+        today = datetime.date.today().isoformat()
+        key = f"budget:social:{today}"
+        count = await redis_client.incr(key)
+        if count == 1:
+            # Set expiry for the new daily key (24h + buffer)
+            await redis_client.expire(key, 86400 + 3600)
+        
+        return count <= SocialService.AUTONOMOUS_DAILY_BUDGET
+
     @staticmethod
     async def process_new_post(post_id: int):
         """
@@ -34,15 +50,23 @@ class SocialService:
                 if not active_agents:
                     return
 
-                # 3. For each agent, decide what to do
-                for agent in active_agents:
-                    # Chances: 30% react, 15% reply, 55% silence
+                # 3. Rate limiting: Only a limited number of agents will react/reply to any single post
+                # to avoid uncontrolled LLM costs.
+                max_interested_agents = random.randint(1, 5)
+                interested_agents = random.sample(active_agents, min(len(active_agents), max_interested_agents))
+
+                for agent in interested_agents:
+                    # Chances: 40% react, 20% reply, 40% silence among the 'interested' subset
                     choice = random.random()
                     
-                    if choice < 0.3:
+                    if choice < 0.4:
                         await SocialService.agent_react(agent, post.id)
-                    elif choice < 0.45:
-                        asyncio.create_task(SocialService.agent_reply(agent.id, post.id))
+                    elif choice < 0.6:
+                        # Introduce a small random delay to spread out LLM calls
+                        async def delayed_reply(a_id, p_id):
+                            await asyncio.sleep(random.randint(5, 30))
+                            await SocialService.agent_reply(a_id, p_id)
+                        asyncio.create_task(delayed_reply(agent.id, post.id))
                     
             except Exception as e:
                 print(f"❌ SocialService Error: {e}")
@@ -52,7 +76,8 @@ class SocialService:
         """Agent adds a random reaction"""
         async with SessionLocal() as db:
             try:
-                query = select(FeedPost).where(FeedPost.id == post_id)
+                # Use SELECT ... FOR UPDATE to prevent race conditions when updating reactions
+                query = select(FeedPost).where(FeedPost.id == post_id).with_for_update()
                 result = await db.execute(query)
                 post = result.scalar_one_or_none()
                 
@@ -63,6 +88,7 @@ class SocialService:
 
                 current = list(post.reactions or [])
                 if not any(r.get("agent_id") == agent.id for r in current):
+                    # Atomic-like update: we have the lock, so we can safely modify and save
                     current.append({"emoji": emoji, "agent_id": agent.id})
                     post.reactions = current
                     await db.commit()
@@ -81,6 +107,10 @@ class SocialService:
                 post = (await db.execute(post_q)).scalar_one_or_none()
                 
                 if not agent or not post: return
+
+                if not await SocialService.check_autonomous_budget():
+                    print("⚠️ Social budget reached, skipping reply LLM call.")
+                    return
 
                 prompt = (
                     f"You are part of an AI Agent Social Network. Your friend agent {post.agent.name} just posted:\n"
@@ -115,6 +145,10 @@ class SocialService:
                 agent_q = select(Agent).where(Agent.id == agent_id)
                 agent = (await db.execute(agent_q)).scalar_one_or_none()
                 if not agent: return
+
+                if not await SocialService.check_autonomous_budget():
+                    print("⚠️ Social budget reached, skipping insight LLM call.")
+                    return
 
                 prompt = (
                     f"You are an autonomous AI Agent in a social network. "

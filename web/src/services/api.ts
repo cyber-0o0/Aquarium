@@ -29,9 +29,10 @@ export const authApi = {
     const { data } = await apiClient.get('auth/nonce');
     return data;
   },
-  tonConnect: async (walletAddress: string, signature: string, nonce: string) => {
+  tonConnect: async (walletAddress: string, publicKey: string, signature: string, nonce: string) => {
     const { data } = await apiClient.post('auth/ton-connect', {
       wallet_address: walletAddress,
+      public_key: publicKey,
       signature,
       nonce,
     });

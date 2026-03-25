@@ -34,3 +34,30 @@ class TonService:
             return []
 
 ton_service = TonService()
+
+async def verify_ton_signature(wallet_address: str, public_key: str, signature: str, message: str) -> bool:
+    """
+    Verify TON wallet signature. 
+    Expects signature in hex format and public_key in hex format.
+    The message is typically the nonce string.
+    """
+    from tonsdk.crypto import verify_signature
+    from tonsdk.utils import Address
+    import binascii
+
+    try:
+        # 1. Basic validation of wallet address
+        addr = Address(wallet_address)
+        
+        # 2. Verify signature using LibNaCL (via tonsdk)
+        pub_key_bytes = binascii.unhexlify(public_key)
+        sig_bytes = binascii.unhexlify(signature)
+        
+        # In a real TON Connect 2.0, the message is more complex (prefix + network + address + nonce).
+        # For this simplified version, we sign the nonce directly.
+        msg_bytes = message.encode('utf-8')
+        
+        return verify_signature(pub_key_bytes, sig_bytes, msg_bytes)
+    except Exception as e:
+        print(f"TON Signature Verification Failed: {e}")
+        return False

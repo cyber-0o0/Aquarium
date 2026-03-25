@@ -431,7 +431,9 @@ class AgentRuntime:
         tools = self._build_tools()
         tools_used: List[str] = []
         
-        memory_ctx = await get_memory_context(self.agent)
+        memory_ctx = ""
+        if db:
+            memory_ctx = await get_memory_context(self.agent.id, input_text, db)
         messages = self._build_messages(input_text, memory_ctx=memory_ctx)
         meta = get_model_info(self.model) or {}
 
@@ -477,126 +479,94 @@ class AgentRuntime:
 
     async def stream_task(self, input_text: str, db: Optional[Any] = None) -> AsyncIterator[Dict[str, Any]]:
         """
-        True token-by-token streaming using astream_events (LangChain v2 API).
-
-        Yields:
-          {"type": "tool_start",  "tool": "ton_balance", "args": {...}}
-          {"type": "tool_result", "tool": "ton_balance", "result": "..."}
-          {"type": "token",       "content": "hello "}       ← real LLM tokens
-          {"type": "done",        "tools_used": [...], "tokens_used": 123}
-          {"type": "error",       "message": "..."}
-
-        How it works:
-          - astream_events emits fine-grained events as the LLM generates them.
-          - "on_chat_model_stream" fires for every token the LLM produces.
-          - "on_tool_start" / "on_tool_end" fire when tools are called.
-          - This gives real sub-100ms per-token latency, not batched chunks.
+        True token-by-token streaming with manual tool-calling loop.
+        Avoids dependency on AgentExecutor (which is missing in some environments).
         """
-        from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
-        from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
         tools = self._build_tools()
+        tool_map = {t.name: t for t in tools}
         meta = get_model_info(self.model) or {}
-        force_plain = not meta.get("supports_tools", True)
+        supports_tools = meta.get("supports_tools", True)
+        
+        memory_ctx = ""
+        if db:
+            memory_ctx = await get_memory_context(self.agent.id, input_text, db)
 
-        memory_ctx = await get_memory_context(self.agent)
-
-        # ── Case 1: no tools or model doesn't support tool-calling ────────────
-        # Use plain astream — real token-by-token from the LLM
-        if not tools or force_plain:
-            llm = self._get_llm(streaming=True)
-            messages = self._build_messages(input_text, memory_ctx=memory_ctx)
-            tokens_used = 0
-            accumulated = ""
-            try:
-                async for chunk in llm.astream(messages):
-                    content = chunk.content
-                    if content:
-                        accumulated += content
-                        yield {"type": "token", "content": content}
-                    tokens_used += _extract_tokens(chunk)
-                yield {"type": "done", "tools_used": [], "tokens_used": tokens_used}
-            except Exception as e:
-                yield {"type": "error", "message": str(e)}
-            return
-
-        # ── Case 2: tools available — use AgentExecutor with astream_events ──
-        # AgentExecutor handles the tool-call loop internally and
-        # astream_events lets us intercept every token and tool event.
-        llm = self._get_llm(streaming=True)
-
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", self.get_full_system_prompt(memory_ctx=memory_ctx)),
-            ("human", "{input}"),
-            MessagesPlaceholder("agent_scratchpad"),
-        ])
-
-        agent = create_tool_calling_agent(llm, tools, prompt)
-        executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            max_iterations=MAX_ITERATIONS,
-            return_intermediate_steps=False,
-            handle_parsing_errors=True,
-        )
-
+        messages = self._build_messages(input_text, memory_ctx=memory_ctx)
         tools_used: List[str] = []
         tokens_used = 0
-        accumulated = ""
+        accumulated_output = ""
 
         try:
-            async for event in executor.astream_events(
-                {"input": input_text},
-                version="v2",  # use LangChain events API v2
-            ):
-                kind = event["event"]
+            for _ in range(MAX_ITERATIONS):
+                llm = self._get_llm(streaming=True)
+                if tools and supports_tools:
+                    llm = llm.bind_tools(tools)
+                
+                last_ai_message = None
+                
+                # Step 1: Stream chunks from the LLM
+                async for chunk in llm.astream(messages):
+                    if last_ai_message is None:
+                        last_ai_message = chunk
+                    else:
+                        try:
+                            last_ai_message = last_ai_message + chunk
+                        except:
+                            # Fallback if + operator is missing or inconsistent in this LangChain version
+                            if hasattr(last_ai_message, "content") and hasattr(chunk, "content"):
+                                last_ai_message.content += chunk.content
+                    
+                    if hasattr(chunk, "content") and chunk.content:
+                        content = chunk.content
+                        if not isinstance(content, str):
+                            content = str(content)
+                        yield {"type": "token", "content": content}
+                        accumulated_output += content
+                    
+                    tokens_used += _extract_tokens(chunk)
 
-                # Real token from the LLM — fire immediately
-                if kind == "on_chat_model_stream":
-                    chunk = event["data"].get("chunk")
-                    if chunk and chunk.content:
-                        accumulated += chunk.content
-                        yield {"type": "token", "content": chunk.content}
+                if last_ai_message is None:
+                    break
+                    
+                messages.append(last_ai_message)
 
-                # Tool is being called
-                elif kind == "on_tool_start":
-                    tool_name = event.get("name", "unknown")
-                    tools_used.append(tool_name)
-                    yield {
-                        "type": "tool_start",
-                        "tool": tool_name,
-                        "args": event["data"].get("input", {}),
-                    }
+                # Step 2: Check for tool calls
+                tool_calls = getattr(last_ai_message, "tool_calls", None)
+                if not tool_calls:
+                    break # No tool calls, we're done
 
-                # Tool returned a result
-                elif kind == "on_tool_end":
-                    tool_name = event.get("name", "unknown")
-                    output = event["data"].get("output", "")
-                    yield {
-                        "type": "tool_result",
-                        "tool": tool_name,
-                        "result": str(output)[:500],
-                    }
+                # Step 3: Execute tool calls sequentially
+                for tc in tool_calls:
+                    name = tc["name"]
+                    args = tc["args"]
+                    call_id = tc["id"]
+                    
+                    tools_used.append(name)
+                    yield {"type": "tool_start", "tool": name, "args": args}
+                    
+                    tool = tool_map.get(name)
+                    try:
+                        result_obj = await tool.ainvoke(args) if tool else f"Error: Tool '{name}' not found"
+                        result_str = str(result_obj)
+                    except Exception as e:
+                        result_str = f"Tool Execution Error: {e}"
 
-                # LLM finished — grab token usage from metadata
-                elif kind == "on_chat_model_end":
-                    response = event["data"].get("output")
-                    if response:
-                        tokens_used += _extract_tokens(response)
+                    yield {"type": "tool_result", "tool": name, "result": result_str[0:1000]}
+                    messages.append(ToolMessage(content=result_str, tool_call_id=call_id))
 
             yield {
                 "type": "done",
                 "tools_used": list(dict.fromkeys(tools_used)),
-                "tokens_used": tokens_used,
+                "tokens_used": tokens_used
             }
 
-            # Update summary memory
-            asyncio.create_task(
-                update_memory(self.agent.id, input_text, accumulated)
-            )
+            # Update memory in background
+            if accumulated_output:
+                asyncio.create_task(update_memory(self.agent.id, input_text, accumulated_output))
 
         except Exception as e:
-            yield {"type": "error", "message": str(e)}
+            yield {"type": "error", "message": f"Stream Loop Error: {str(e)}"}
+
 
 def _extract_tokens(response) -> int:
     if response is None:
@@ -642,9 +612,8 @@ async def wrap_with_fallback(agent: AgentModel, task_fn, primary_model=None, db=
                 api_key = _env_key(m.get("api_key_env"))
                 base_url = m.get("base_url")
 
-            # Если ключа вообще нет (даже в платформе), и это не основная модель — пропускаем
-            if not api_key and model_id != p_model:
-                continue
+                if not api_key and model_id != p_model:
+                    continue
                 
             if i > 0:
                 print(f"🔄 [FALLBACK] Attempting with {model_id} after error in previous attempt", file=sys.stderr)
@@ -656,24 +625,22 @@ async def wrap_with_fallback(agent: AgentModel, task_fn, primary_model=None, db=
             err_str = str(e).lower()
             
             # Список критических ошибок, на которых НЕТ смысла пробовать другой провайдер
-            # (например, ошибка в самом промпте или слишком длинный текст)
             terminal_errors = ["validation_error", "too many messages", "maximum context length"]
             
-            # Если это 400 ошибка (Bad Request) и она в списке терминальных — выходим сразу
             if "400" in err_str and any(te in err_str for te in terminal_errors):
                 raise
             
-            # Ошибки API ключей (401), отсутствие ключа, таймауты и 5xx ошибки — ПОВОД для фолбека
-            # Мы пробуем следующий доступный вариант
             if i < len(models_to_try) - 1:
                 wait_time = 0.5 * (i + 1)
                 await asyncio.sleep(wait_time)
                 continue
             else:
-                # Если все попытки исчерпаны — прокидываем последнюю ошибку
                 raise
 
-    raise last_err or Exception("All attempts failed.")
+    if last_err:
+        raise last_err
+    raise Exception("All attempts failed.")
+
 
 
 async def run_agent_task(

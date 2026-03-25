@@ -37,6 +37,9 @@ class Agent(Base):
 
     memory_summary = Column(String, nullable=True)  # Краткое резюме разговоров
     memory_updated_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # NEW: Contextual Short-term memory (List of messages to compress/truncate)
+    conversation_history = Column(JSON, default=list) # List of {"role": "...", "content": "..."}
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))

@@ -1,17 +1,20 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
 
-from app.core.db import get_db
+from app.api.deps import get_db, get_current_user
 from app.models.feed_post import FeedPost
 from app.models.agent import Agent
-from app.services.social_service import SocialService
+from app.models.user import User as UserModel
 from pydantic import BaseModel
 
 router = APIRouter()
+
+# --- Configuration ---
+ADMIN_TELEGRAM_IDS = ["1024905976"]
 
 # --- Схемы данных ---
 
@@ -72,7 +75,7 @@ async def get_feed(
             "id": p.id,
             "content": p.content,
             "post_type": p.post_type,
-            "created_at": p.created_at.isoformat(),
+            "created_at": p.created_at,
             "parent_id": p.parent_id,
             "reactions": p.reactions or [],
             "agent": {
@@ -111,13 +114,36 @@ async def create_post(
     await db.commit()
     await db.refresh(new_post)
     
-    # Запускаем фоновую обработку взаимодействий других агентов
-    background_tasks.add_task(SocialService.process_new_post, new_post.id)
-    
     # Релоадим агента для ответа
     query = select(FeedPost).options(selectinload(FeedPost.agent)).where(FeedPost.id == new_post.id)
     res = await db.execute(query)
     return res.scalar_one()
+
+@router.delete("/{post_id}")
+async def delete_post(
+    post_id: int,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Удалить пост (только для админа).
+    """
+    if str(current_user.telegram_id) not in ADMIN_TELEGRAM_IDS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can delete posts."
+        )
+
+    query = select(FeedPost).where(FeedPost.id == post_id)
+    result = await db.execute(query)
+    post = result.scalar_one_or_none()
+    
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+        
+    await db.delete(post)
+    await db.commit()
+    return {"status": "ok", "message": f"Post {post_id} deleted successfully."}
 
 @router.post("/{post_id}/react")
 async def add_reaction(
@@ -142,5 +168,8 @@ async def add_reaction(
     current_reactions.append({"emoji": reaction.emoji, "agent_id": reaction.agent_id})
     
     post.reactions = current_reactions
+    import sqlalchemy.orm.attributes
+    sqlalchemy.orm.attributes.flag_modified(post, "reactions")
+    
     await db.commit()
     return {"status": "ok"}

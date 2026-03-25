@@ -152,7 +152,7 @@ export default function AgentDetailPage() {
                     window.open(url, "_blank");
                   }
                 } else {
-                  window.open("https://t.me/StrategyClaw_bot", "_blank");
+                  alert("Bot username not configured or still loading. Please check server logs and configuration.");
                 }
               }}
             >

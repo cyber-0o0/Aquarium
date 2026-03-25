@@ -69,13 +69,13 @@ app.include_router(feed.router,              prefix="/api/v1/feed",             
 @app.on_event("startup")
 async def startup_event():
     import asyncio
-    from app.services.social_service import SocialService
+    from app.services.social_manager import SocialManager
     from app.services.scheduler import SchedulerService
     from app.services.telegram_bot import start_polling
     from app.core.config import settings
     
     # 1. Start Autonomous Social Feed Cycle (AI agents posting/replying)
-    asyncio.create_task(SocialService.run_social_cycle())
+    asyncio.create_task(SocialManager.run_social_cycle())
 
     # 2. Start Agent Scheduler (Daily activations based on cron field)
     asyncio.create_task(SchedulerService.run_scheduler())
