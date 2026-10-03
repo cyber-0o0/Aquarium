@@ -1,0 +1,13 @@
+H1   mod_head_helmet_basic      bone=head         tris= 448 budget=300-450 ok
+T2   mod_torso_plate_carrier    bone=chest        tris= 632 budget=450-700 ok
+T1   mod_torso_chest_rig        bone=chest        tris= 444 budget=300-500 ok
+A1   mod_arm_patch.L            bone=upper_arm.L  tris=  32 budget=20-40 ok
+A1   mod_arm_patch.R            bone=upper_arm.R  tris=  32 budget=20-40 ok
+P1   mod_belt_pouches           bone=pelvis       tris= 336 budget=200-350 ok
+P3   mod_belt_grenades          bone=pelvis       tris= 248 budget=120-250 ok
+L1   mod_knee.L                 bone=shin.L       tris=  96 budget=60-120 ok
+L1   mod_knee.R                 bone=shin.R       tris=  96 budget=60-120 ok
+B1   mod_back_pack_small        bone=chest        tris= 276 budget=250-400 ok
+B3   mod_back_engineer          bone=chest        tris= 416 budget=400-600 ok
+W1   mod_wpn_rifle              bone=weapon       tris= 400 budget=400-700 ok
+W1m  mod_mag_rifle              bone=magazine     tris=  48 budget=40-80 ok

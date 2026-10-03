@@ -511,7 +511,7 @@ ellipsoid("Mouth", loc - nrm * 0.0024, (0.017, 0.0035, 0.0032), "M_Lip", ["Head"
 # ---------------------------------------------------------------------------
 # JACKET (torso, collar, sleeves)
 # ---------------------------------------------------------------------------
-TB = ["Hips", "Spine", "Chest", "Neck", "Shoulder.L", "Shoulder.R", "UpperArm.L", "UpperArm.R"]
+TB = ["Hips", "Spine", "Chest", "Neck", "UpperArm.L", "UpperArm.R"]
 torso = loft("Jacket", [
     ring((0, 0.000, 0.99), Z, FRONT, 0.150, 0.104, 2.2),
     ring((0, 0.000, 1.04), Z, FRONT, 0.152, 0.105, 2.2),
@@ -530,7 +530,7 @@ collar = loft("Collar", [
     ring((0, 0.004, 1.468), Z, FRONT, 0.092, 0.084),
     ring((0, 0.006, 1.500), Z, FRONT, 0.075, 0.071),
     ring((0, 0.008, 1.532), Z, FRONT, 0.069, 0.067),
-], "M_Uniform", ["Chest", "Neck"], segs=16, cap0=False, cap1=False, subd=0)
+], "M_Uniform", ["Chest"], segs=16, cap0=False, cap1=False, subd=0)  # stiff collar
 apply_mod(collar, "SOLIDIFY", thickness=0.007, offset=1.0)
 apply_subsurf(collar, 1)
 
@@ -565,7 +565,7 @@ sleeve = loft("Sleeve.L", [
     ring((0.62, 0, ARM_Z), X, Z, 0.051, 0.047),
     ring((0.70, 0, ARM_Z), X, Z, 0.048, 0.045),
     ring((0.725, 0, ARM_Z), X, Z, 0.044, 0.042),
-], "M_Uniform", ["Chest", "Shoulder.L", "UpperArm.L", "LowerArm.L"], segs=16, left=True)
+], "M_Uniform", ["Chest", "UpperArm.L", "LowerArm.L"], segs=16, left=True)
 sb = bvh_of(sleeve)
 # shoulder pocket on the lateral upper arm (faces up in a palms-down T-pose)
 patch("SleevePocket.L", sb, (0, 0, ARM_Z), X, Z, -0.55, 1.05, 0.255, 0.375, "M_Uniform",
@@ -754,7 +754,8 @@ for s, sx in (("L", 1), ("R", -1)):
     def m(p, sx=sx):
         return (p[0] * sx, p[1], p[2])
     BONES += [
-        ("Shoulder." + s, m((0.03, 0, 1.42)), m((0.165, 0, ARM_Z)), "Chest", False, True),
+        # shoulders don't deform: the torso under rigid gear (straps, plates) is chest-only
+        ("Shoulder." + s, m((0.03, 0, 1.42)), m((0.165, 0, ARM_Z)), "aim", False, False),
         ("UpperArm." + s, m((0.165, 0, ARM_Z)), m((0.465, 0.004, ARM_Z)), "Shoulder." + s, True, True),
         ("LowerArm." + s, m((0.465, 0.004, ARM_Z)), m((0.750, 0, ARM_Z)), "UpperArm." + s, True, True),
         ("Hand." + s, m((0.750, 0, ARM_Z)), m((0.848, 0, ARM_Z)), "LowerArm." + s, True, True),
@@ -773,6 +774,28 @@ for s, sx in (("L", 1), ("R", -1)):
             (fname + "1." + s, m((x0, fy, ARM_Z + 0.001)), m(mid), "Hand." + s, False, True),
             (fname + "2." + s, m(mid), m(tip), fname + "1." + s, True, True),
         ]
+
+# Gear sockets (no deform). Positions follow the gear spec (UNIT-GEAR-ASSETS.md), given there in
+# Y-up / face +Z metres for a skeleton with shoulders at 1.51 m; scaled to this body (shoulders
+# at ARM_Z) and converted to Blender axes: (x, y, z)_spec -> (x, -z, y) * k.
+SPEC_K = ARM_Z / 1.51
+
+
+def spec_pt(x, y, z):
+    return (x * SPEC_K, -z * SPEC_K, y * SPEC_K)
+
+
+WPN = spec_pt(-0.18, 1.40, 0.30)
+MAG = spec_pt(-0.18, 1.28, 0.43)
+BONES += [
+    # AIM: one bone on the shoulder line carrying both arms and the weapon. Rotating it pitches
+    # (or turns) arms + rifle as one rigid unit, so the grip holds while the torso and the gear
+    # on it barely move. See GEAR_README / build_gear.py for the recommended split.
+    ("aim", (0, 0.004, ARM_Z), (0, -0.15, ARM_Z), "Chest", False, False),
+    # child of the aim bone: when the spine chain bends to aim, rifle + hands + torso gear follow
+    ("weapon", WPN, (WPN[0], WPN[1] - 0.20, WPN[2]), "aim", False, False),
+    ("magazine", MAG, (MAG[0], MAG[1], MAG[2] - 0.12), "weapon", False, False),
+]
 
 arm_data = bpy.data.armatures.new("SoldierRig")
 arm_data.display_type = "STICK"
@@ -794,7 +817,7 @@ for name, h, t, parent, conn, deform in BONES:
 for b in eb:  # consistent bone roll: Z axis up for spine/arms, forward for legs
     if b.name.startswith(("UpperLeg", "LowerLeg", "Foot", "Toes")):
         b.align_roll(Vector((0, -1, 0)) if not b.name.startswith(("Foot", "Toes")) else Vector((0, 0, 1)))
-    elif b.name in ("Root",):
+    elif b.name in ("Root", "weapon"):
         b.align_roll(Vector((0, 0, 1)))
     elif b.name in ("Hips", "Spine", "Chest", "Neck", "Head"):
         b.align_roll(Vector((0, -1, 0)))
@@ -817,12 +840,24 @@ def seg_dist(p, a, b):
 def weight(ob, power=5.0):
     names = [n for n in ob["bones"].split(",") if n]
     groups = {n: ob.vertex_groups.new(name=n) for n in names}
+    # torso/sleeve: the upper arm only pulls on vertices beyond the shoulder joint, so the
+    # shoulder tops (under straps and plates) stay chest-driven when the arms or `aim` move
+    mask = "Chest" in names and any(n.startswith("UpperArm") for n in names)
     for v in ob.data.vertices:
         ws = []
         for n in names:
             a, b = BONE_SEG[n]
             d = max(seg_dist(v.co, a, b), 0.004)
-            ws.append((1.0 / d ** power, n))
+            w = 1.0 / d ** power
+            if mask and n.startswith("UpperArm"):
+                w *= smoothstep(0.14, 0.22, abs(v.co.x))
+            # belt line (1.03-1.08 m) is pelvis-only, so belt gear stays put when the spine bends
+            # or the thighs swing; the bend lives between the belt and the vest (1.08-1.15 m)
+            if n == "Spine":
+                w *= smoothstep(1.075, 1.13, v.co.z)
+            if n.startswith("UpperLeg"):
+                w *= 1.0 - smoothstep(0.93, 1.0, v.co.z)
+            ws.append((w, n))
         ws.sort(reverse=True)
         ws = ws[:3]
         tot = sum(w for w, _ in ws)
@@ -879,6 +914,21 @@ for ob in PIECES.values():
     sub = ob.modifiers.new("RenderSmooth", "SUBSURF")
     sub.levels = 0
     sub.render_levels = 1
+
+# bone names used by the game spec (vertex groups follow the rename automatically)
+RENAME = {"Root": "root", "Hips": "pelvis", "Spine": "spine", "Chest": "chest", "Neck": "neck",
+          "Head": "head"}
+for s in ("L", "R"):
+    for old, new in (("Shoulder", "shoulder"), ("UpperArm", "upper_arm"), ("LowerArm", "forearm"),
+                     ("Hand", "hand"), ("UpperLeg", "thigh"), ("LowerLeg", "shin"),
+                     ("Foot", "foot"), ("Toes", "toe")):
+        RENAME["%s.%s" % (old, s)] = "%s.%s" % (new, s)
+    for f in ("Thumb", "Index", "Middle", "Ring", "Pinky"):
+        for i in (1, 2):
+            RENAME["%s%d.%s" % (f, i, s)] = "%s_%02d.%s" % (f.lower(), i, s)
+for old, new in RENAME.items():
+    arm.data.bones[old].name = new
+assert all(vg.name in arm.data.bones for ob in PIECES.values() for vg in ob.vertex_groups)
 
 # UVs
 for ob in PIECES.values():

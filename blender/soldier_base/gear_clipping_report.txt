@@ -1,0 +1,135 @@
+Max penetration per item and pose, millimetres (clean < 2 mm).
+Body = soldier mesh skinned to the rig; bones = where the body pokes in.
+Rifle vs gloves is excluded (held). P3 sleeves enclose P1's belt on purpose.
+Poses are TEST poses built by build_gear.py (incl. the aim offset at its limits:
+up 45, down 35, left 45, right 45 deg), not the game's INF_*/WRK_* clips.
+
+motor_rifle  rest      mod_head_helmet_basic      ok
+motor_rifle  rest      mod_torso_plate_carrier    ok
+motor_rifle  rest      mod_arm_patch.L            ok
+motor_rifle  rest      mod_arm_patch.R            ok
+motor_rifle  rest      mod_back_pack_small        ok
+motor_rifle  rest      mod_belt_pouches           ok
+motor_rifle  rest      mod_knee.L                 ok
+motor_rifle  rest      mod_knee.R                 ok
+motor_rifle  rest      mod_wpn_rifle              n/a (bind pose: weapon bone at the spec's rest point)
+motor_rifle  rest      mod_mag_rifle              n/a (bind pose: weapon bone at the spec's rest point)
+motor_rifle  run       mod_head_helmet_basic      ok
+motor_rifle  run       mod_torso_plate_carrier    body 4 mm [chest, neck, upper_arm.L, upper_arm.R] 
+motor_rifle  run       mod_arm_patch.L            ok
+motor_rifle  run       mod_arm_patch.R            ok
+motor_rifle  run       mod_back_pack_small        body 3 mm [upper_arm.L, upper_arm.R] 
+motor_rifle  run       mod_belt_pouches           ok
+motor_rifle  run       mod_knee.L                 ok
+motor_rifle  run       mod_knee.R                 ok
+motor_rifle  run       mod_wpn_rifle              ok
+motor_rifle  run       mod_mag_rifle              ok
+motor_rifle  fire      mod_head_helmet_basic      ok
+motor_rifle  fire      mod_torso_plate_carrier    body 5 mm [chest, neck, upper_arm.L, upper_arm.R] 
+motor_rifle  fire      mod_arm_patch.L            ok
+motor_rifle  fire      mod_arm_patch.R            ok
+motor_rifle  fire      mod_back_pack_small        body 3 mm [upper_arm.L, upper_arm.R] 
+motor_rifle  fire      mod_belt_pouches           ok
+motor_rifle  fire      mod_knee.L                 ok
+motor_rifle  fire      mod_knee.R                 ok
+motor_rifle  fire      mod_wpn_rifle              ok
+motor_rifle  fire      mod_mag_rifle              ok
+motor_rifle  reload    mod_head_helmet_basic      ok
+motor_rifle  reload    mod_torso_plate_carrier    body 5 mm [chest, neck, upper_arm.L, upper_arm.R] 
+motor_rifle  reload    mod_arm_patch.L            ok
+motor_rifle  reload    mod_arm_patch.R            ok
+motor_rifle  reload    mod_back_pack_small        body 3 mm [upper_arm.L, upper_arm.R] 
+motor_rifle  reload    mod_belt_pouches           ok
+motor_rifle  reload    mod_knee.L                 ok
+motor_rifle  reload    mod_knee.R                 ok
+motor_rifle  reload    mod_wpn_rifle              ok
+motor_rifle  reload    mod_mag_rifle              ok
+motor_rifle  aim_up    mod_head_helmet_basic      ok
+motor_rifle  aim_up    mod_torso_plate_carrier    body 5 mm [chest, neck, upper_arm.L, upper_arm.R] 
+motor_rifle  aim_up    mod_arm_patch.L            ok
+motor_rifle  aim_up    mod_arm_patch.R            ok
+motor_rifle  aim_up    mod_back_pack_small        body 2 mm [neck, upper_arm.R] 
+motor_rifle  aim_up    mod_belt_pouches           ok
+motor_rifle  aim_up    mod_knee.L                 ok
+motor_rifle  aim_up    mod_knee.R                 ok
+motor_rifle  aim_up    mod_wpn_rifle              ok
+motor_rifle  aim_up    mod_mag_rifle              ok
+motor_rifle  aim_down  mod_head_helmet_basic      ok
+motor_rifle  aim_down  mod_torso_plate_carrier    body 6 mm [chest, neck, upper_arm.L, upper_arm.R] | mod_wpn_rifle 3 mm
+motor_rifle  aim_down  mod_arm_patch.L            ok
+motor_rifle  aim_down  mod_arm_patch.R            ok
+motor_rifle  aim_down  mod_back_pack_small        body 3 mm [upper_arm.R] 
+motor_rifle  aim_down  mod_belt_pouches           ok
+motor_rifle  aim_down  mod_knee.L                 ok
+motor_rifle  aim_down  mod_knee.R                 ok
+motor_rifle  aim_down  mod_wpn_rifle              body 0 mm  | mod_torso_plate_carrier 3 mm
+motor_rifle  aim_down  mod_mag_rifle              ok
+motor_rifle  aim_left  mod_head_helmet_basic      ok
+motor_rifle  aim_left  mod_torso_plate_carrier    body 5 mm [chest, neck, upper_arm.L, upper_arm.R] 
+motor_rifle  aim_left  mod_arm_patch.L            ok
+motor_rifle  aim_left  mod_arm_patch.R            ok
+motor_rifle  aim_left  mod_back_pack_small        body 3 mm [upper_arm.L, upper_arm.R] 
+motor_rifle  aim_left  mod_belt_pouches           ok
+motor_rifle  aim_left  mod_knee.L                 ok
+motor_rifle  aim_left  mod_knee.R                 ok
+motor_rifle  aim_left  mod_wpn_rifle              ok
+motor_rifle  aim_left  mod_mag_rifle              ok
+motor_rifle  aim_right mod_head_helmet_basic      ok
+motor_rifle  aim_right mod_torso_plate_carrier    body 5 mm [chest, neck, upper_arm.L, upper_arm.R] 
+motor_rifle  aim_right mod_arm_patch.L            ok
+motor_rifle  aim_right mod_arm_patch.R            ok
+motor_rifle  aim_right mod_back_pack_small        body 3 mm [upper_arm.L, upper_arm.R] 
+motor_rifle  aim_right mod_belt_pouches           ok
+motor_rifle  aim_right mod_knee.L                 ok
+motor_rifle  aim_right mod_knee.R                 ok
+motor_rifle  aim_right mod_wpn_rifle              ok
+motor_rifle  aim_right mod_mag_rifle              ok
+engineer     rest      mod_head_helmet_basic      ok
+engineer     rest      mod_torso_chest_rig        ok
+engineer     rest      mod_arm_patch.L            ok
+engineer     rest      mod_arm_patch.R            ok
+engineer     rest      mod_back_engineer          ok
+engineer     rest      mod_belt_pouches           ok
+engineer     rest      mod_belt_grenades          ok
+engineer     run       mod_head_helmet_basic      ok
+engineer     run       mod_torso_chest_rig        ok
+engineer     run       mod_arm_patch.L            ok
+engineer     run       mod_arm_patch.R            ok
+engineer     run       mod_back_engineer          ok
+engineer     run       mod_belt_pouches           ok
+engineer     run       mod_belt_grenades          ok
+engineer     aim_up    mod_head_helmet_basic      ok
+engineer     aim_up    mod_torso_chest_rig        body 3 mm [neck, upper_arm.R] 
+engineer     aim_up    mod_arm_patch.L            ok
+engineer     aim_up    mod_arm_patch.R            ok
+engineer     aim_up    mod_back_engineer          body 2 mm [neck, upper_arm.R] 
+engineer     aim_up    mod_belt_pouches           ok
+engineer     aim_up    mod_belt_grenades          ok
+engineer     aim_down  mod_head_helmet_basic      ok
+engineer     aim_down  mod_torso_chest_rig        body 3 mm [chest, upper_arm.L, upper_arm.R] 
+engineer     aim_down  mod_arm_patch.L            ok
+engineer     aim_down  mod_arm_patch.R            ok
+engineer     aim_down  mod_back_engineer          body 3 mm [upper_arm.L, upper_arm.R] 
+engineer     aim_down  mod_belt_pouches           ok
+engineer     aim_down  mod_belt_grenades          ok
+engineer     aim_left  mod_head_helmet_basic      ok
+engineer     aim_left  mod_torso_chest_rig        body 3 mm [chest, upper_arm.L, upper_arm.R] 
+engineer     aim_left  mod_arm_patch.L            ok
+engineer     aim_left  mod_arm_patch.R            ok
+engineer     aim_left  mod_back_engineer          body 3 mm [upper_arm.L, upper_arm.R] 
+engineer     aim_left  mod_belt_pouches           ok
+engineer     aim_left  mod_belt_grenades          ok
+engineer     aim_right mod_head_helmet_basic      ok
+engineer     aim_right mod_torso_chest_rig        body 3 mm [chest, neck, upper_arm.L, upper_arm.R] 
+engineer     aim_right mod_arm_patch.L            ok
+engineer     aim_right mod_arm_patch.R            ok
+engineer     aim_right mod_back_engineer          body 3 mm [upper_arm.L, upper_arm.R] 
+engineer     aim_right mod_belt_pouches           ok
+engineer     aim_right mod_belt_grenades          ok
+engineer     build     mod_head_helmet_basic      ok
+engineer     build     mod_torso_chest_rig        body 2 mm [upper_arm.L, upper_arm.R] 
+engineer     build     mod_arm_patch.L            ok
+engineer     build     mod_arm_patch.R            ok
+engineer     build     mod_back_engineer          ok
+engineer     build     mod_belt_pouches           ok
+engineer     build     mod_belt_grenades          ok

@@ -20,10 +20,16 @@
 | `soldier_base_turnaround.png` | Лист front / side / back (орто, ровный свет, светло-серый фон) |
 | `renders/` | Отдельные виды + 3/4 и вид RTS-камеры сверху |
 | `build_soldier.py` | Скрипт, который собирает всё это с нуля |
+| `soldier_gear.blend`, `build_gear.py`, `gear_*.png` | Снаряжение — см. GEAR_README.md |
 
-Меши: `Soldier_Body`, `Soldier_Hair`, `Soldier_Gloves`, `Soldier_Boots`. Все привязаны к `Armature`
-(Root, Hips, Spine, Chest, Neck, Head, Shoulder/UpperArm/LowerArm/Hand, по 2 кости на палец,
-UpperLeg/LowerLeg/Foot/Toes; суффиксы `.L` / `.R`). Веса плавно распределены по расстоянию до костей.
+Меши: `Soldier_Body`, `Soldier_Hair`, `Soldier_Gloves`, `Soldier_Boots`. Все привязаны к `Armature`.
+Кости названы по ТЗ снаряжения: `root`, `pelvis`, `spine`, `chest`, `neck`, `head`,
+`shoulder/upper_arm/forearm/hand`, по 2 кости на палец (`index_01.L` …),
+`thigh/shin/foot/toe`; суффиксы `.L` / `.R`. Недеформирующие сокеты: `aim` (руки и оружие для
+механики прицела), `weapon`, `magazine`. Веса плавно распределены по расстоянию до костей;
+зона ремня жёстко на `pelvis`, верх плеч на `chest` — под жёсткое снаряжение.
+
+Снаряжение и механика прицела описаны в [GEAR_README.md](GEAR_README.md).
 
 ## Пересборка
 
